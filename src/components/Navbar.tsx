@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
-
 interface NavLink {
   name: string;
   id: string;
@@ -19,16 +18,13 @@ const navLinks: NavLink[] = [
 ];
 
 const Navbar = () => {
-  const [isOpen, setIsOpen]       = useState(false);
+  const [isOpen, setIsOpen]        = useState(false);
   const [activeSection, setActive] = useState("home");
   const [isScrolled, setScrolled]  = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const winH = window.innerHeight;
-      const inBetween = scrollY % winH > winH * 0.6 && scrollY % winH < winH * 0.15;
-      setScrolled(inBetween);
+      setScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -124,7 +120,6 @@ const Navbar = () => {
           display: flex; align-items: center; justify-content: center;
           z-index: 210; position: relative;
         }
-        .nb-hbtn.scrolled { background: rgba(0,0,0,.55); }
 
         .nb-desktop { display: flex; }
         .nb-mobile  { display: none;  }
@@ -134,6 +129,7 @@ const Navbar = () => {
         }
       `}</style>
 
+      {/* Desktop */}
       <div className={`nb-desktop nb-pill${isScrolled ? " scrolled" : ""}`} style={{
         alignItems: "center", justifyContent: "space-between",
         width: "100%", maxWidth: 860, height: 55,
@@ -151,33 +147,33 @@ const Navbar = () => {
         </div>
       </div>
 
+      {/* Mobile bar — always blur */}
       <div className="nb-mobile" style={{
         width: "100%",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingLeft: 8,
-        paddingRight: 8,
+        paddingLeft: 16,
+        paddingRight: 12,
+        height: 55,
+        borderRadius: 999,
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: isScrolled ? "rgba(255,255,255,0.03)" : "rgba(18,18,18,0.75)",
+        backdropFilter: "blur(20px) saturate(160%)",
+        WebkitBackdropFilter: "blur(20px) saturate(160%)",
+        transition: "background 0.6s",
       }}>
-        <span
-          className="nb-brand"
-          style={{
-            opacity: isScrolled ? 0 : 1,
-            pointerEvents: isScrolled ? "none" : "auto",
-            transition: "opacity 0.4s ease",
-          }}
-        >Mr Fahed Designer</span>
-
-        <button className={`nb-hbtn${isScrolled ? " scrolled" : ""}`}
-          onClick={() => setIsOpen(!isOpen)}>
+        <span className="nb-brand">Mr Fahed Designer</span>
+        <button className="nb-hbtn" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
+      {/* Mobile overlay menu */}
       <div className={`nb-overlay${isOpen ? " show" : " hide"}`}>
         <p style={{
           color: "rgba(255,255,255,.18)", fontSize: 10, fontWeight: 900,
           letterSpacing: "0.5em", textTransform: "uppercase",
-          marginBottom: 16, fontStyle: "",
+          marginBottom: 16,
         }}>Navigation</p>
 
         {navLinks.map(l => (

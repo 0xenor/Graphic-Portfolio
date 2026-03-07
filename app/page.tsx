@@ -105,16 +105,16 @@ export default function Home() {
 
         /* ── About ── */
         .about-grid { display:grid; grid-template-columns:1fr; width:100%; align-items:center; padding:0 24px; }
-        @media(min-width:768px)  { .about-grid { grid-template-columns:1fr 1fr; gap:16px; padding:0 48px; } }
-        @media(min-width:1024px) { .about-grid { gap:20px; padding:0 80px; } }
-        @media(min-width:1280px) { .about-grid { padding:0 120px; } }
-        .img-col  { order:1; display:flex; justify-content:center; align-items:flex-end; width:100%; }
+        @media(min-width:768px)  { .about-grid { grid-template-columns:1fr 1fr; gap:0px; padding:0 48px; } }
+        @media(min-width:1024px) { .about-grid { gap:0px; padding:0 64px; } }
+        @media(min-width:1280px) { .about-grid { padding:0 100px; } }
+        .img-col  { order:1; display:flex; justify-content:center; align-items:center; width:100%; }
         @media(min-width:768px) { .img-col { order:2; justify-content:flex-end; } }
-        .text-col { order:2; display:flex; flex-direction:column; align-items:center; text-align:center; padding:40px 0; gap:20px; }
+        .text-col { order:2; display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px 0; gap:20px; }
         @media(min-width:768px) { .text-col { order:1; align-items:flex-start; text-align:left; padding:0; } }
-        .profile-img { width:100%; height:auto; max-width:460px; display:block; object-fit:contain; user-select:none; }
-        @media(min-width:768px)  { .profile-img { max-width:690px; } }
-        @media(min-width:1024px) { .profile-img { max-width:650px; } }
+        .profile-img { width:100%; height:auto; max-width:560px; display:block; object-fit:contain; user-select:none; }
+        @media(min-width:768px)  { .profile-img { max-width:740px; } }
+        @media(min-width:1024px) { .profile-img { max-width:700px; } }
         .accent-line { width:48px; height:3px; background:#bb00ff; border-radius:2px; }
         .fade-up { transition:opacity 1.8s cubic-bezier(0.16,1,0.3,1),transform 1.8s cubic-bezier(0.16,1,0.3,1); }
         .fade-up.hidden  { opacity:0; transform:translateY(40px); }
@@ -125,10 +125,11 @@ export default function Home() {
         .btn-secondary:hover { background:#bb00ff; color:white; border-color:#bb00ff; }
         .stats-row { display:flex; gap:32px; flex-wrap:wrap; justify-content:center; }
         @media(min-width:768px) { .stats-row { justify-content:flex-start; } }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
         /* ── Skills ── */
         .sk-title { font-family:inherit; font-weight:900; font-size:clamp(3rem,10vw,7rem); letter-spacing:-0.04em; text-transform:uppercase; color:white; line-height:1; margin-bottom:72px; text-align:center; }
-        .sk-grid  { display:flex; flex-wrap:wrap; gap:40px; align-items:flex-end; justify-content:center; }
+        .sk-grid  { display:flex; flex-wrap:wrap; gap:40px; align-items:center; justify-content:center; }
         .sk-card  { display:flex; flex-direction:column; align-items:center; opacity:0; transform:translateY(30px); transition:opacity 0.6s ease,transform 0.6s ease; }
         .sk-card.show { opacity:1; transform:translateY(0); }
         .sk-pct   { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:#bb00ff; letter-spacing:0.05em; margin-bottom:8px; align-self:flex-end; padding-right:2px; }
@@ -358,39 +359,36 @@ export default function Home() {
         </div>
       </section>
 
-
+      {/* ══ ABOUT ══ */}
       <section id="about" ref={aboutRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center py-12 overflow-hidden">
         <div className="absolute w-[500px] h-[500px] bg-[#bb00ff]/10 blur-[180px] rounded-full -bottom-20 -right-20 -z-10" />
         <div className={`about-grid fade-up ${isVisible ? "visible" : "hidden"}`}>
           <div className="img-col">
-            <img src="pro.png" alt="Fahed Hadji" className="profile-img" style={{ marginBottom:"0px" }} />
+            <img src="pro.png" alt="Fahed Hadji" className="profile-img" />
           </div>
-          <div className="text-col">
+          <div className="text-col" style={{ marginLeft:"24px", marginTop:"40px" }}>
             <div className="accent-line" />
-            <h3 className="" style={{ margin:0, fontWeight:900, textTransform:"uppercase", letterSpacing:"-0.04em", lineHeight:1.1, fontSize:"clamp(1.6rem,4vw,6rem)", whiteSpace:"nowrap" }}>
+            <h3 className="" style={{ margin:0, fontWeight:900, textTransform:"uppercase", letterSpacing:"-0.04em", lineHeight:1.1, fontSize:"clamp(3rem,8vw,6rem)", whiteSpace:"nowrap" }}>
               <span style={{ color:"white" }}>WHO </span><span style={{ color:"#bb00ff" }}>AM I?</span>
             </h3>
-            <div style={{ maxWidth:500 }}>
+            <div style={{ maxWidth:500, paddingLeft:12 }}>
               <ShinyText
                 text="Morocco-based Graphic Designer and Content Creator with 5+ years of experience in the creative industry. I specialize in social media and advertising design, transforming brand messages into high-impact visual stories. My approach blends creative storytelling with a strategic, analytical edge—ensuring every project is not only visually compelling but also results-driven and delivered with meticulous precision."
-                disabled={false} speed={3} className="text-white/70 text-base md:text-lg font-medium leading-relaxed tracking-tight" />
+                disabled={false} speed={3} className="text-white/70 text-base md:text-lg font-bold leading-relaxed tracking-tight" />
             </div>
-            <div style={{ maxWidth:500 }}>
-              <ShinyText text="I have collaborated with diverse clients producing social media assets, advertising visuals, thumbnails, and brand identity graphics — always with precision, creativity, and strict respect for deadlines."
-                disabled={false} speed={3} className="text-white/50 text-sm md:text-base font-medium leading-relaxed tracking-tight" />
-            </div>
+            
             <div className="stats-row">
-              {[{ num:"5+", label:"Years Exp." },{ num:"10+", label:"Clients" },{ num:"∞", label:"Creativity" }].map(s => (
+              {[{ num:"5+", label:"Years Exp." },{ num:"50+", label:"Clients" },{ num:"∞", label:"Creativity" }].map(s => (
                 <div key={s.label} style={{ display:"flex", flexDirection:"column", gap:4 }}>
                   <span className="" style={{ fontSize:"clamp(1.8rem,4vw,2.5rem)", fontWeight:900, color:"#bb00ff", lineHeight:1 }}>{s.num}</span>
                   <span className="" style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)" }}>{s.label}</span>
                 </div>
               ))}
             </div>
-            <a href="#contact" className="btn-primary" style={{ alignSelf:"center", marginTop:8 }}>Work With Me →</a>
           </div>
         </div>
       </section>
+
 
       {/* ══ SKILLS ══ */}
       <section id="skills" ref={skillsRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ padding:"80px 48px" }}>
