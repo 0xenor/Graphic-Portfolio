@@ -360,34 +360,33 @@ export default function Home() {
       </section>
 
       {/* ══ ABOUT ══ */}
-      <section id="about" ref={aboutRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center py-12 overflow-hidden">
-        <div className="absolute w-[500px] h-[500px] bg-[#bb00ff]/10 blur-[180px] rounded-full -bottom-20 -right-20 -z-10" />
-        <div className={`about-grid fade-up ${isVisible ? "visible" : "hidden"}`}>
-          <div className="img-col">
-            <img src="pro.png" alt="Fahed Hadji" className="profile-img" />
+     <section id="about" ref={aboutRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center py-12 overflow-hidden">
+  <div className="absolute w-[500px] h-[500px] bg-[#bb00ff]/10 blur-[180px] rounded-full -bottom-20 -right-20 -z-10" />
+  <div className={`about-grid fade-up ${isVisible ? "visible" : "hidden"}`}>
+    <div className="img-col">
+      <img src="pro.png" alt="Fahed Hadji" className="profile-img" />
+    </div>
+    <div className="text-col" style={{ marginLeft:"24px", marginTop:"40px" }}>
+      <div className="accent-line" />
+      <h3 className="" style={{ margin:0, fontWeight:900, textTransform:"uppercase", letterSpacing:"-0.04em", lineHeight:1.1, fontSize:"clamp(3rem,8vw,6rem)", whiteSpace:"nowrap", textAlign:"center" }}>
+        <span style={{ color:"white" }}>WHO </span><span style={{ color:"#bb00ff" }}>AM I?</span>
+      </h3>
+      <div style={{ maxWidth:500, paddingLeft:10, textAlign:"center" }}>
+        <ShinyText
+          text="Morocco-based Graphic Designer and Content Creator with 5+ years of experience in the creative industry. I specialize in social media and advertising design, transforming brand messages into high-impact visual stories. My approach blends creative storytelling with a strategic, analytical edge—ensuring every project is not only visually compelling but also results-driven and delivered with meticulous precision."
+          disabled={false} speed={3} className="text-white/70 text-base md:text-lg font-bold leading-relaxed tracking-tight" />
+      </div>
+      <div className="stats-row" style={{ maxWidth:500, justifyContent:"center" }}>
+        {[{ num:"5+", label:"Years Exp." },{ num:"50+", label:"Clients" },{ num:"∞", label:"Creativity" }].map(s => (
+          <div key={s.label} style={{ display:"flex", flexDirection:"column", gap:4, alignItems:"center" }}>
+            <span className="" style={{ fontSize:"clamp(1.8rem,4vw,2.5rem)", fontWeight:900, color:"#bb00ff", lineHeight:1 }}>{s.num}</span>
+            <span className="" style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)" }}>{s.label}</span>
           </div>
-          <div className="text-col" style={{ marginLeft:"24px", marginTop:"40px" }}>
-            <div className="accent-line" />
-            <h3 className="" style={{ margin:0, fontWeight:900, textTransform:"uppercase", letterSpacing:"-0.04em", lineHeight:1.1, fontSize:"clamp(3rem,8vw,6rem)", whiteSpace:"nowrap" }}>
-              <span style={{ color:"white" }}>WHO </span><span style={{ color:"#bb00ff" }}>AM I?</span>
-            </h3>
-            <div style={{ maxWidth:500, paddingLeft:12 }}>
-              <ShinyText
-                text="Morocco-based Graphic Designer and Content Creator with 5+ years of experience in the creative industry. I specialize in social media and advertising design, transforming brand messages into high-impact visual stories. My approach blends creative storytelling with a strategic, analytical edge—ensuring every project is not only visually compelling but also results-driven and delivered with meticulous precision."
-                disabled={false} speed={3} className="text-white/70 text-base md:text-lg font-bold leading-relaxed tracking-tight" />
-            </div>
-            
-            <div className="stats-row">
-              {[{ num:"5+", label:"Years Exp." },{ num:"50+", label:"Clients" },{ num:"∞", label:"Creativity" }].map(s => (
-                <div key={s.label} style={{ display:"flex", flexDirection:"column", gap:4 }}>
-                  <span className="" style={{ fontSize:"clamp(1.8rem,4vw,2.5rem)", fontWeight:900, color:"#bb00ff", lineHeight:1 }}>{s.num}</span>
-                  <span className="" style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)" }}>{s.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
 
 
       {/* ══ SKILLS ══ */}
