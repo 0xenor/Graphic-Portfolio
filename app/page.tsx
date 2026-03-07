@@ -382,7 +382,7 @@ export default function Home() {
   
       <section id="skills" ref={skillsRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ padding:"80px 48px" }}>
         <div style={{ position:"absolute", bottom:-100, left:"50%", transform:"translateX(-50%)", width:600, height:400, background:"rgba(187,0,255,0.07)", borderRadius:"50%", filter:"blur(130px)", zIndex:0 }} />
-        <h2 className="sk-title">My <span style={{ color:"#bb00ff" }}>SKILLS</span></h2>
+        <h2 className="sk-title">MY SKILLS</h2>
         <div className="sk-grid">
           {skills.map((s,i) => {
             const R=56, C=2*Math.PI*R;
