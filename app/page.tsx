@@ -345,11 +345,11 @@ export default function Home() {
 
       {/* ══ HERO ══ */}
       <section id="home" className="relative z-10 flex flex-col items-center justify-center text-center w-full min-h-screen px-6">
-        <div className="w-full max-w-[900px] flex flex-col items-center gap-0">
-          <SplitTextComponent text="Hello!"          className="text-[clamp(3.5rem,12vw,7rem)] font-[900] text-white" delay={250} />
-          <SplitTextComponent text="I'm Fahed Hadji" className="text-[clamp(2.2rem,9vw,6rem)]  font-[900] text-white" delay={200} />
-          <div className="flex items-center justify-center mt-10 mb-12">
-            <ShinyText text="Graphic Designer" speed={5} className="text-[clamp(1.2rem,4vw,2.25rem)] font-extrabold" />
+        <div className="w-full max-w-[900px] flex flex-col items-center" style={{ gap:0, lineHeight:1.1 }}>
+          <SplitTextComponent text="Hello!"          className="text-[clamp(3.5rem,12vw,7rem)] font-[900] text-white" delay={250} style={{ letterSpacing:"-0.03em" }} />
+          <SplitTextComponent text="I'm Fahed Hadji" className="text-[clamp(2.2rem,9vw,6rem)] font-[900] text-white"  delay={200} style={{ letterSpacing:"-0.03em" }} />
+          <div className="flex items-center justify-center" style={{ marginTop:24, marginBottom:32 }}>
+            <ShinyText text="Graphic Designer" speed={5} className="text-[clamp(1.2rem,4vw,2.25rem)] font-[600]" />
           </div>
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
             <a href="#projects" className="btn-primary">View Projects →</a>
@@ -357,6 +357,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+
 
       <section id="about" ref={aboutRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center py-12 overflow-hidden">
         <div className="absolute w-[500px] h-[500px] bg-[#bb00ff]/10 blur-[180px] rounded-full -bottom-20 -right-20 -z-10" />
@@ -371,7 +372,7 @@ export default function Home() {
             </h3>
             <div style={{ maxWidth:500 }}>
               <ShinyText
-                text="I am a Morocco-based Graphic Designer and Content Creator with over five years of experience in the creative industry. I specialize in social media and advertising design, helping brands communicate their message through impactful and engaging visual content. Throughout my freelance career, I have collaborated with a diverse range of clients, producing high-quality social media assets, advertising visuals, thumbnails, and brand identity graphics. Holding a Baccalaureate in Arts and Humanities and currently pursuing a Law degree, I bring a unique analytical perspective and a structured approach to visual communication. My work blends creativity with strategic thinking, a strict respect for deadlines, and meticulous attention to detail to deliver effective, visually compelling results."
+                text="Morocco-based Graphic Designer and Content Creator with 5+ years of experience in the creative industry. I specialize in social media and advertising design, transforming brand messages into high-impact visual stories. My approach blends creative storytelling with a strategic, analytical edge—ensuring every project is not only visually compelling but also results-driven and delivered with meticulous precision."
                 disabled={false} speed={3} className="text-white/70 text-base md:text-lg font-medium leading-relaxed tracking-tight" />
             </div>
             <div style={{ maxWidth:500 }}>

@@ -25,8 +25,10 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
+      const scrollY = window.scrollY;
       const winH = window.innerHeight;
-      setScrolled(window.scrollY > winH * 0.9);
+      const inBetween = scrollY % winH > winH * 0.6 && scrollY % winH < winH * 0.15;
+      setScrolled(inBetween);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -47,16 +49,14 @@ const Navbar = () => {
           backdrop-filter: blur(20px) saturate(160%);
           -webkit-backdrop-filter: blur(20px) saturate(160%);
           box-shadow: 0 4px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
-          transition: background .6s, box-shadow .6s, backdrop-filter .6s, border-color .6s, opacity .6s;
+          transition: background .6s, box-shadow .6s, backdrop-filter .6s, border-color .6s;
         }
         .nb-pill.scrolled {
-          background: transparent;
-          border-color: transparent;
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
+          background: rgba(255,255,255,0.03);
+          border-color: rgba(255,255,255,0.06);
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
           box-shadow: none;
-          opacity: 0;
-          pointer-events: none;
         }
         .nb-link {
           font-family: 'Syne', sans-serif;
@@ -134,7 +134,6 @@ const Navbar = () => {
         }
       `}</style>
 
-      {/* ── Desktop pill ── */}
       <div className={`nb-desktop nb-pill${isScrolled ? " scrolled" : ""}`} style={{
         alignItems: "center", justifyContent: "space-between",
         width: "100%", maxWidth: 860, height: 55,
@@ -152,19 +151,12 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ── Mobile: brand left + hamburger right ── */}
       <div className="nb-mobile" style={{
         width: "100%",
         alignItems: "center",
         justifyContent: "space-between",
         paddingLeft: 8,
         paddingRight: 8,
-        backdropFilter: "blur(20px) saturate(160%)",
-        WebkitBackdropFilter: "blur(20px) saturate(160%)",
-        background: "rgba(255,255,255,0.03)",
-        borderRadius: 999,
-        height: 55,
-        border: "1px solid rgba(255,255,255,0.06)",
       }}>
         <span
           className="nb-brand"
@@ -173,7 +165,7 @@ const Navbar = () => {
             pointerEvents: isScrolled ? "none" : "auto",
             transition: "opacity 0.4s ease",
           }}
-        >Mr Fahed</span>
+        >Mr Fahed Designer</span>
 
         <button className={`nb-hbtn${isScrolled ? " scrolled" : ""}`}
           onClick={() => setIsOpen(!isOpen)}>
@@ -181,12 +173,11 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* ── Mobile overlay ── */}
       <div className={`nb-overlay${isOpen ? " show" : " hide"}`}>
         <p style={{
           color: "rgba(255,255,255,.18)", fontSize: 10, fontWeight: 900,
           letterSpacing: "0.5em", textTransform: "uppercase",
-          marginBottom: 16, fontStyle: "italic",
+          marginBottom: 16, fontStyle: "",
         }}>Navigation</p>
 
         {navLinks.map(l => (
@@ -198,7 +189,7 @@ const Navbar = () => {
               color: activeSection === l.id ? "#bb00ff" : "rgba(255,255,255,.1)",
             }}>{l.num}</span>
             <span style={{
-              fontSize: 26, fontWeight: 900, letterSpacing: "-.04em", textTransform: "uppercase",
+              fontSize: 17, fontWeight: 900, letterSpacing: "-.04em", textTransform: "uppercase",
               color: activeSection === l.id ? "white" : "rgba(255,255,255,.2)",
             }}>{l.name}</span>
           </a>
