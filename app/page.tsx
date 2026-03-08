@@ -31,7 +31,7 @@ const projects: { id: number; title: string; category: Exclude<Category, "All">;
   { id: 10, title: "", category: "Design Social Media", img: "c1.png" },
   { id: 11, title: "", category: "Design Social Media", img: "c2.png" },
   { id: 12, title: "", category: "Design Social Media", img: "c4.png" },
-  { id: 13, title: "", category: "Design Social Media", img: "fibre optique poster 2 4G ثء 2.png" },
+  { id: 13, title: "", category: "Design Social Media", img: "fibre optique poster 2 4G \u062b\u0621 2.png" },
   { id: 14, title: "", category: "Design Social Media", img: "fibre optique poster ex.png" },
   { id: 15, title: "", category: "Design Social Media", img: "m3.png" },
   { id: 16, title: "", category: "Design Social Media", img: "m5.png" },
@@ -75,17 +75,15 @@ const projects: { id: number; title: string; category: Exclude<Category, "All">;
   { id: 55, title: "", category: "Thumbnails", img: "thumbnail 14.png" },
   { id: 56, title: "", category: "Thumbnails", img: "thumbnail design 1.png" },
   { id: 57, title: "", category: "Thumbnails", img: "thumbnail hicham.png" },
-
-  
 ];
 
 const CATS: Category[] = ["All", "Thumbnails", "Instagram Brand Identity & Grid Styling", "Design Social Media", "Logo"];
 
 const catColors: Record<string, string> = {
   "Thumbnails": "#31A8FF",
-  "3D Projects": "#FF7518",
-  "Social Media": "#bb00ff",
-  "Logo & Branding": "#FF9A00",
+  "Instagram Brand Identity & Grid Styling": "#FF7518",
+  "Design Social Media": "#bb00ff",
+  "Logo": "#FF9A00",
 };
 
 export default function Home() {
@@ -200,17 +198,42 @@ export default function Home() {
         .tab { font-family:inherit; font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:10px 24px; border-radius:999px; border:1.5px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.45); background:transparent; cursor:pointer; transition:all 0.3s ease; }
         .tab:hover { border-color:rgba(187,0,255,0.5); color:white; }
         .tab.active { background:#bb00ff; border-color:#bb00ff; color:white; box-shadow:0 0 24px rgba(187,0,255,0.4); }
-        .proj-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:24px; width:100%; }
-        @media(min-width:1024px) { .proj-grid { grid-template-columns:repeat(3,1fr); } }
-        .proj-card { position:relative; border-radius:16px; overflow:hidden; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); aspect-ratio:16/10; cursor:pointer; transition:transform 0.3s ease,box-shadow 0.3s ease,border-color 0.3s; animation:fadeCard 0.5s ease both; }
+
+        /* ── Pinterest Masonry Grid ── */
+        .proj-grid {
+          columns: 1;
+          column-gap: 24px;
+          width: 100%;
+          max-width: 1100px;
+        }
+        @media(min-width:640px)  { .proj-grid { columns: 2; } }
+        @media(min-width:1024px) { .proj-grid { columns: 3; } }
+
+        .proj-card {
+          position: relative;
+          border-radius: 16px;
+          overflow: hidden;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.07);
+          cursor: pointer;
+          transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s;
+          animation: fadeCard 0.5s ease both;
+          break-inside: avoid;
+          margin-bottom: 24px;
+          display: inline-block;
+          width: 100%;
+        }
         .proj-card:hover { transform:translateY(-6px); border-color:rgba(187,0,255,0.4); box-shadow:0 16px 48px rgba(187,0,255,0.15); }
         @keyframes fadeCard { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        .proj-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(187,0,255,0.08),rgba(0,0,0,0.4)); }
-        .proj-img { width:100%; height:100%; object-fit:cover; display:block; }
+
+        /* Images fill their natural height — no cropping */
+        .proj-img { width:100%; height:auto; display:block; object-fit:contain; }
+
         .proj-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,transparent 60%); opacity:0; transition:opacity 0.3s ease; display:flex; flex-direction:column; justify-content:flex-end; padding:20px; }
         .proj-card:hover .proj-overlay { opacity:1; }
         .proj-name  { font-family:inherit; font-size:15px; font-weight:800; color:white; letter-spacing:-0.02em; }
         .proj-badge { display:inline-block; margin-top:6px; font-family:inherit; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:4px 10px; border-radius:999px; }
+        .proj-placeholder { width:100%; min-height:160px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(187,0,255,0.08),rgba(0,0,0,0.4)); }
         .proj-add-icon { font-size:32px; color:rgba(255,255,255,0.15); }
         .proj-add-txt  { font-family:inherit; font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.2); margin-top:8px; }
 
@@ -269,7 +292,7 @@ export default function Home() {
                 disabled={false} speed={3} className="text-white/70 text-lg md:text-xl font-bold leading-relaxed" />
             </div>
             <div className="stats-row" style={{ maxWidth: 500 }}>
-              {[{ num: "5+", label: "Years Exp." }, { num: "50+", label: "Clients" }, { num: "∞", label: "Creativity" }].map(s => (
+              {[{ num: "5+", label: "Years Exp." }, { num: "50+", label: "Clients" }, { num: "\u221e", label: "Creativity" }].map(s => (
                 <div key={s.label} style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
                   <span style={{ fontSize: "clamp(1.8rem,4vw,2.5rem)", fontWeight: 900, color: "#bb00ff", lineHeight: 1 }}>{s.num}</span>
                   <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.75em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>{s.label}</span>
@@ -320,7 +343,7 @@ export default function Home() {
             </button>
           ))}
         </div>
-        <div className="proj-grid" style={{ maxWidth: 1100 }}>
+        <div className="proj-grid">
           {filtered.map((p, i) => (
             <div key={p.id} className="proj-card" style={{ animationDelay: `${i * 80}ms` }}>
               {p.img ? (
@@ -328,7 +351,7 @@ export default function Home() {
               ) : (
                 <div className="proj-placeholder">
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                    <span className="proj-add-icon">＋</span>
+                    <span className="proj-add-icon">\uFF0B</span>
                     <span className="proj-add-txt">Add Image</span>
                   </div>
                 </div>
@@ -344,7 +367,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="contact"className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+      <section id="contact" className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
         <div style={{
           position: "absolute",
           top: "50%",
@@ -384,26 +407,20 @@ export default function Home() {
 
         <div className="contact-bottom w-full px-6 md:px-12 py-10 flex flex-col md:flex-row items-center justify-between gap-8 border-t border-white/5">
           <div className="flex-1 flex justify-start order-2 md:order-1">
-            <span className="contact-copy text-[11px] text-white/40  tracking-widest text-center md:text-left">
-              © 2026 — <span className="text-[#bb00ff] hover:underline" > Graphic Designer </span> & <span className="text-[#bb00ff] hover:underline" >Content Creator</span> · All rights reserved.
+            <span className="contact-copy text-[11px] text-white/40 tracking-widest text-center md:text-left">
+              © 2026 — <span className="text-[#bb00ff] hover:underline">Graphic Designer</span> & <span className="text-[#bb00ff] hover:underline">Content Creator</span> · All rights reserved.
             </span>
           </div>
 
           <div className="flex-1 flex items-center justify-center gap-6 order-1 md:order-2">
-            <a
-              href="https://wa.me/212718982539"
-              target="_blank"
-              rel="noreferrer"
+            <a href="https://wa.me/212718982539" target="_blank" rel="noreferrer"
               className="text-white/50 hover:text-[#25D366] transition-all duration-300 hover:scale-110">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
               </svg>
             </a>
 
-            <a
-              href="https://www.instagram.com/mr_fahed_designer/"
-              target="_blank"
-              rel="noreferrer"
+            <a href="https://www.instagram.com/mr_fahed_designer/" target="_blank" rel="noreferrer"
               className="text-white/50 hover:text-[#E4405F] transition-all duration-300 hover:scale-110">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -412,10 +429,7 @@ export default function Home() {
               </svg>
             </a>
 
-            <a
-              href="https://www.tiktok.com/@fahddesigner19?lang=fr"
-              target="_blank"
-              rel="noreferrer"
+            <a href="https://www.tiktok.com/@fahddesigner19?lang=fr" target="_blank" rel="noreferrer"
               className="text-white/50 hover:text-[#00f2ea] transition-all duration-300 hover:scale-110 drop-shadow-[0_0_8px_rgba(255,0,80,0.6)]">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.06-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
@@ -424,7 +438,7 @@ export default function Home() {
           </div>
 
           <div className="flex-1 flex flex-col items-center md:items-end order-3">
-            <span className="contact-copy text-[15px] text-white  tracking-widest text-center md:text-right">
+            <span className="contact-copy text-[15px] text-white tracking-widest text-center md:text-right">
               Designed & Built by <a href="https://instagram.com/ilyass._ag" target="_blank" rel="noreferrer" className="text-[#bb00ff] hover:underline">@ilyass._ag</a>
             </span>
           </div>
