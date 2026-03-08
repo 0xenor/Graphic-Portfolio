@@ -129,7 +129,7 @@ const Navbar = () => {
         }
       `}</style>
 
-      {/* ── Desktop ── */}
+
       <div className={`nb-desktop nb-pill${isScrolled ? " scrolled" : ""}`} style={{
         alignItems: "center", justifyContent: "space-between",
         width: "100%", maxWidth: 860, height: 55,
@@ -147,7 +147,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ── Mobile bar — blur dايماً ── */}
+
       <div className="nb-mobile" style={{
         width: "100%",
         alignItems: "center",
@@ -168,7 +168,6 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* ── Mobile overlay menu ── */}
       <div className={`nb-overlay${isOpen ? " show" : " hide"}`}>
         <button
           onClick={() => setIsOpen(false)}
