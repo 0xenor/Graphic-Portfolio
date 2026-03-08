@@ -79,7 +79,7 @@ const projects: { id: number; title: string; category: Exclude<Category, "All">;
   
 ];
 
-const CATS: Category[] = ["All", "Thumbnails", "Instagram Brand Identity & Grid Styling", "Social Media", "Logo"];
+const CATS: Category[] = ["All", "Thumbnails", "Instagram Brand Identity & Grid Styling", "Design Social Media", "Logo"];
 
 const catColors: Record<string, string> = {
   "Thumbnails": "#31A8FF",
