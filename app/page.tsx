@@ -19,18 +19,23 @@ const skills = [
 type Category = "All" | "Thumbnails" | "3D Projects" | "Social Media" | "Logo & Branding";
 
 const projects: { id: number; title: string; category: Exclude<Category, "All">; img: string }[] = [
-  { id: 1, title: "Thumbnail 01", category: "Thumbnails", img: "" },
-  { id: 2, title: "Thumbnail 02", category: "Thumbnails", img: "" },
-  { id: 3, title: "Thumbnail 03", category: "Thumbnails", img: "" },
-  { id: 4, title: "3D Project 01", category: "3D Projects", img: "" },
-  { id: 5, title: "3D Project 02", category: "3D Projects", img: "" },
-  { id: 6, title: "3D Project 03", category: "3D Projects", img: "" },
-  { id: 7, title: "Social Post 01", category: "Social Media", img: "" },
-  { id: 8, title: "Social Post 02", category: "Social Media", img: "" },
-  { id: 9, title: "Social Post 03", category: "Social Media", img: "" },
-  { id: 10, title: "Logo 01", category: "Logo & Branding", img: "" },
-  { id: 11, title: "Logo 02", category: "Logo & Branding", img: "" },
-  { id: 12, title: "Logo 03", category: "Logo & Branding", img: "" },
+  { id: 1, title: "Thumbnail 01", category: "Thumbnails", img: "apple juice.png" },
+  { id: 2, title: "Thumbnail 02", category: "Thumbnails", img: "media.png" },
+  { id: 3, title: "Thumbnail 03", category: "Thumbnails", img: "Pancake.png" },
+  { id: 4, title: "3D Project 01", category: "3D Projects", img: "poster center.png" },
+  { id: 5, title: "3D Project 02", category: "3D Projects", img: "Machine.png" },
+  { id: 6, title: "3D Project 03", category: "3D Projects", img: "C.png" },
+  { id: 7, title: "Social Post 01", category: "Social Media", img: "Travail.png" },
+  { id: 8, title: "Social Post 02", category: "Social Media", img: "Artboard 1.png" },
+  { id: 9, title: "Social Post 03", category: "Social Media", img: "Artboard 2.png" },
+  { id: 10, title: "Logo 01", category: "Logo & Branding", img: "c1.png" },
+  { id: 11, title: "Logo 02", category: "Logo & Branding", img: "c2.png" },
+  { id: 12, title: "Logo 03", category: "Logo & Branding", img: "c4.png" },
+  { id: 13, title: "Social Post 02", category: "Social Media", img: "fibre optique poster 2 4G ثء 2.png" },
+  { id: 14, title: "Social Post 03", category: "Social Media", img: "fibre optique poster ex.png" },
+  { id: 15, title: "Logo 01", category: "Logo & Branding", img: "m3.png" },
+  { id: 16, title: "Logo 02", category: "Logo & Branding", img: "m5.png" },
+  { id: 17, title: "Logo 03", category: "Logo & Branding", img: "" },
 ];
 
 const CATS: Category[] = ["All", "Thumbnails", "3D Projects", "Social Media", "Logo & Branding"];
