@@ -97,37 +97,39 @@ export default function Home() {
     <main className="relative w-full min-h-screen bg-black flex flex-col items-center overflow-x-hidden">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&display=swap');
-        .syne { font-family:inherit; }
 
         /* ── About ── */
         .about-grid { display:grid; grid-template-columns:1fr; width:100%; align-items:center; padding:0 24px; }
-        @media(min-width:768px)  { .about-grid { grid-template-columns:1fr 1fr; gap:0px; padding:0 48px; } }
-        @media(min-width:1024px) { .about-grid { gap:0px; padding:0 64px; } }
-        @media(min-width:1280px) { .about-grid { padding:0 100px; } }
-        .img-col  { order:1; display:flex; justify-content:center; align-items:center; width:100%; }
-        @media(min-width:768px) { .img-col { order:2; justify-content:flex-end; } }
-        .text-col { order:2; display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px 0; gap:20px; }
-        @media(min-width:768px) { .text-col { order:1; align-items:flex-start; text-align:left; padding:0; } }
-        .profile-img { width:100%; height:auto; max-width:560px; display:block; object-fit:contain; user-select:none; }
-        @media(min-width:768px)  { .profile-img { max-width:740px; } }
-        @media(min-width:1024px) { .profile-img { max-width:700px; } }
+        @media(min-width:768px)  { .about-grid { grid-template-columns:1fr 1fr; gap:0px; padding:0 48px 0 80px; align-items:center; } }
+        @media(min-width:1024px) { .about-grid { gap:0px; padding:0 64px 0 80px; align-items:center; } }
+        @media(min-width:1280px) { .about-grid { padding:0 100px 0 80px; align-items:center; } }
+
+        .img-col { order:1; display:flex; justify-content:center; align-items:center; width:100%; }
+        @media(min-width:768px) { .img-col { order:2; justify-content:flex-end; align-items:center; } }
+
+        .text-col { order:2; display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px 0; gap:17px; }
+        @media(min-width:768px) { .text-col { order: 1; align-items:flex-start; text-align:left; padding: 0; } }
+
+       .profile-img { width:100%; height:auto; max-width:560px; display:block; object-fit:contain; user-select:none; margin-top:-80px; }
+       @media(min-width:768px)  { .profile-img { max-width:600px; margin-top:-200px; } }
+       @media(min-width:1024px) { .profile-img { max-width:750px; margin-top:-200px; } }
+
         .accent-line { width:48px; height:3px; background:#bb00ff; border-radius:2px; }
         .fade-up { transition:opacity 1.8s cubic-bezier(0.16,1,0.3,1),transform 1.8s cubic-bezier(0.16,1,0.3,1); }
         .fade-up.hidden  { opacity:0; transform:translateY(40px); }
         .fade-up.visible { opacity:1; transform:translateY(0); }
+
         .btn-primary  { font-family:inherit; background:#bb00ff; border:1.5px solid #bb00ff; color:white; padding:14px 32px; border-radius:8px; font-weight:900; font-size:13px; letter-spacing:0.2em; text-transform:uppercase; text-decoration:none; transition:background 0.3s,color 0.3s; white-space:nowrap; }
         .btn-primary:hover  { background:transparent; color:#bb00ff; }
         .btn-secondary { font-family:inherit; background:transparent; border:1.5px solid rgba(187,0,255,0.5); color:#bb00ff; padding:14px 36px; border-radius:8px; font-weight:900; font-size:13px; letter-spacing:0.2em; text-transform:uppercase; text-decoration:none; transition:background 0.3s,color 0.3s,border-color 0.3s; white-space:nowrap; }
         .btn-secondary:hover { background:#bb00ff; color:white; border-color:#bb00ff; }
+
         .stats-row { display:flex; gap:32px; flex-wrap:wrap; justify-content:center; }
         @media(min-width:768px) { .stats-row { justify-content:flex-start; } }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-        /* about heading responsive alignment */
         .about-heading { text-align:center; }
         @media(min-width:768px) { .about-heading { text-align:left; } }
 
-        /* about text wrap responsive alignment */
         .about-text-wrap { text-align:center; }
         @media(min-width:768px) { .about-text-wrap { text-align:left; } }
 
@@ -152,34 +154,33 @@ export default function Home() {
         .tab { font-family:inherit; font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:10px 24px; border-radius:999px; border:1.5px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.45); background:transparent; cursor:pointer; transition:all 0.3s ease; }
         .tab:hover { border-color:rgba(187,0,255,0.5); color:white; }
         .tab.active { background:#bb00ff; border-color:#bb00ff; color:white; box-shadow:0 0 24px rgba(187,0,255,0.4); }
-        .proj-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px; width:100%; }
-        @media(min-width:1024px) { .proj-grid { grid-template-columns: repeat(3,1fr); } }
-        .proj-card { position:relative; border-radius:16px; overflow:hidden; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); aspect-ratio:16/10; cursor:pointer; transition:transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s; animation: fadeCard 0.5s ease both; }
+        .proj-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:24px; width:100%; }
+        @media(min-width:1024px) { .proj-grid { grid-template-columns:repeat(3,1fr); } }
+        .proj-card { position:relative; border-radius:16px; overflow:hidden; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); aspect-ratio:16/10; cursor:pointer; transition:transform 0.3s ease,box-shadow 0.3s ease,border-color 0.3s; animation:fadeCard 0.5s ease both; }
         .proj-card:hover { transform:translateY(-6px); border-color:rgba(187,0,255,0.4); box-shadow:0 16px 48px rgba(187,0,255,0.15); }
-        @keyframes fadeCard { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-        .proj-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, rgba(187,0,255,0.08), rgba(0,0,0,0.4)); }
+        @keyframes fadeCard { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .proj-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(187,0,255,0.08),rgba(0,0,0,0.4)); }
         .proj-img { width:100%; height:100%; object-fit:cover; display:block; }
-        .proj-overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%); opacity:0; transition:opacity 0.3s ease; display:flex; flex-direction:column; justify-content:flex-end; padding:20px; }
+        .proj-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,transparent 60%); opacity:0; transition:opacity 0.3s ease; display:flex; flex-direction:column; justify-content:flex-end; padding:20px; }
         .proj-card:hover .proj-overlay { opacity:1; }
-        .proj-name { font-family:inherit; font-size:15px; font-weight:800; color:white; letter-spacing:-0.02em; }
-        .proj-badge { display:inline-block; margin-top:6px; font-family:inherit; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:4px 10px; border-radius:999px; background:rgba(187,0,255,0.3); color:#e066ff; }
+        .proj-name  { font-family:inherit; font-size:15px; font-weight:800; color:white; letter-spacing:-0.02em; }
+        .proj-badge { display:inline-block; margin-top:6px; font-family:inherit; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:4px 10px; border-radius:999px; }
         .proj-add-icon { font-size:32px; color:rgba(255,255,255,0.15); }
         .proj-add-txt  { font-family:inherit; font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.2); margin-top:8px; }
 
         /* ── Contact ── */
-        .contact-section { display:flex; flex-direction:column; align-items:center; justify-content:space-between; min-height:100vh; width:100%; padding:80px 48px 48px; position:relative; z-index:10; }
+        .contact-section { display:flex; flex-direction:column; align-items:center; justify-content:space-between; min-height:100vh; width:100%; padding:90px 48px 48px; position:relative; z-index:10; }
         .contact-top { display:flex; flex-direction:column; align-items:center; text-align:center; gap:32px; width:100%; max-width:700px; margin:0 auto; }
         .contact-tag { font-family:inherit; font-size:11px; font-weight:700; letter-spacing:0.3em; text-transform:uppercase; color:#bb00ff; display:flex; align-items:center; gap:10px; justify-content:center; }
-        .contact-tag::before { content:''; width:32px; height:2px; background:#bb00ff; border-radius:2px; display:inline-block; }
-        .contact-tag::after  { content:''; width:32px; height:2px; background:#bb00ff; border-radius:2px; display:inline-block; }
+        .contact-tag::before,.contact-tag::after { content:''; width:32px; height:2px; background:#bb00ff; border-radius:2px; display:inline-block; }
         .contact-big { font-family:inherit; font-weight:900; font-size:clamp(2.5rem,7vw,6rem); letter-spacing:-0.04em; line-height:0.95; color:white; text-transform:uppercase; text-align:center; }
         .contact-big span { color:#bb00ff; }
         .contact-sub { font-family:inherit; font-size:15px; font-weight:500; color:rgba(255,255,255,0.4); line-height:1.6; max-width:420px; text-align:center; }
         .contact-btn { font-family:inherit; font-weight:900; font-size:13px; letter-spacing:0.2em; text-transform:uppercase; text-decoration:none; padding:18px 48px; border-radius:999px; background:#bb00ff; color:white; border:1.5px solid #bb00ff; transition:background 0.3s,color 0.3s,transform 0.2s; display:inline-block; margin-top:8px; }
         .contact-btn:hover { background:transparent; color:#bb00ff; transform:translateY(-2px); }
-        .contact-bottom { display:flex; flex-direction:column; gap:24px; padding-top:64px; border-top:1px solid rgba(255,255,255,0.07); margin-top:80px; align-items:center; }
+        .contact-bottom { display:flex; flex-direction:column; gap:24px; padding-top:64px; border-top:1px solid rgba(255,255,255,0.07); margin-top:80px; align-items:center; width:100%; }
         @media(min-width:768px) { .contact-bottom { flex-direction:row; align-items:center; justify-content:space-between; } }
-        .contact-copy { font-family:inherit; font-size:12px; font-weight:600; color:rgba(255,255,255,0.2); letter-spacing:0.05em; text-align:center; }
+        .contact-copy { font-family:inherit; font-size:18px; font-weight:900; color:rgba(255,255,255,0.2); letter-spacing:0.05em; text-align:center; }
         .socials { display:flex; align-items:center; gap:16px; }
         .social-link { width:46px; height:46px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.5); text-decoration:none; transition:border-color 0.3s,color 0.3s,background 0.3s,transform 0.2s; background:rgba(255,255,255,0.03); }
         .social-link:hover { border-color:#bb00ff; color:white; background:rgba(187,0,255,0.15); transform:translateY(-3px); }
@@ -206,38 +207,38 @@ export default function Home() {
       </section>
 
       {/* ══ ABOUT ══ */}
-      {/* ══ ABOUT ══ */}
-      <section id="about" ref={aboutRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center py-12 overflow-hidden">
+      <section id="about" ref={aboutRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center" style={{ paddingTop: "120px", paddingBottom: "120px" }}>
         <div className="absolute w-[500px] h-[500px] bg-[#bb00ff]/10 blur-[180px] rounded-full -bottom-20 -right-20 -z-10" />
         <div className={`about-grid fade-up ${isVisible ? "visible" : "hidden"}`}>
           <div className="img-col">
-            <img src="pro.png" alt="Fahed Hadji" className="profile-img" />
+            <img src="pro.png" alt="Fahed Hadji" className="profile-img" style={{ marginTop: "-100px" }} />
           </div>
           <div className="text-col">
             <div className="accent-line" />
-            <h3 className="about-heading" style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", lineHeight: 1.1, fontSize: "clamp(3rem,8vw,6rem)", whiteSpace: "nowrap" }}>
+            <h3 className="about-heading" style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", lineHeight: 1.1, fontSize: "clamp(2rem,8vw,8rem)", whiteSpace: "nowrap" }}>
               <span style={{ color: "white" }}>WHO </span><span style={{ color: "#bb00ff" }}>AM I?</span>
             </h3>
-            <div className="about-text-wrap" style={{ maxWidth: 500, paddingLeft: 10 }}>
+            <div className="about-text-wrap" style={{ maxWidth: 700, paddingLeft: 10 }}>
               <ShinyText
                 text="Morocco-based Graphic Designer and Content Creator with 5+ years of experience in the creative industry. I specialize in social media and advertising design, transforming brand messages into high-impact visual stories. My approach blends creative storytelling with a strategic, analytical edge—ensuring every project is not only visually compelling but also results-driven and delivered with meticulous precision."
-                disabled={false} speed={3} className="text-white/70 text-base md:text-lg font-bold leading-relaxed tracking-tight" />
+                disabled={false} speed={3} className="text-white/70 text-lg md:text-xl font-bold leading-relaxed" />
             </div>
             <div className="stats-row" style={{ maxWidth: 500 }}>
               {[{ num: "5+", label: "Years Exp." }, { num: "50+", label: "Clients" }, { num: "∞", label: "Creativity" }].map(s => (
                 <div key={s.label} style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
                   <span style={{ fontSize: "clamp(1.8rem,4vw,2.5rem)", fontWeight: 900, color: "#bb00ff", lineHeight: 1 }}>{s.num}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>{s.label}</span>
+                  <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.75em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>{s.label}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
       </section>
+
       {/* ══ SKILLS ══ */}
       <section id="skills" ref={skillsRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ padding: "80px 48px" }}>
         <div style={{ position: "absolute", bottom: -100, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "rgba(187,0,255,0.07)", borderRadius: "50%", filter: "blur(130px)", zIndex: 0 }} />
-        <h2 className="sk-title">MY SKILLS</h2>
+        <h2 className="sk-title">My <span style={{ color: "#bb00ff" }}>SKILLS</span></h2>
         <div className="sk-grid">
           {skills.map((s, i) => {
             const R = 56, C = 2 * Math.PI * R;
@@ -266,7 +267,7 @@ export default function Home() {
       {/* ══ PROJECTS ══ */}
       <section id="projects" ref={projRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center overflow-x-hidden" style={{ padding: "80px 16px" }}>
         <div style={{ position: "absolute", top: -100, right: -100, width: 500, height: 500, background: "rgba(187,0,255,0.06)", borderRadius: "50%", filter: "blur(130px)", zIndex: 0 }} />
-        <h2 className={`proj-title fade-up ${projVisible ? "visible" : "hidden"}`}>MY PROJECTS</h2>
+        <h2 className={`proj-title fade-up ${projVisible ? "visible" : "hidden"}`}>My <span style={{ color: "#bb00ff" }}>PROJECTS</span></h2>
         <div className={`tabs fade-up ${projVisible ? "visible" : "hidden"}`} style={{ transitionDelay: "0.2s" }}>
           {CATS.map(c => (
             <button key={c} className={`tab${activeTab === c ? " active" : ""}`} onClick={() => setActiveTab(c)}>
@@ -299,43 +300,113 @@ export default function Home() {
       </section>
 
       {/* ══ CONTACT ══ */}
-      <section id="contact" className="contact-section">
-        <div style={{ position: "absolute", top: "20%", right: "-10%", width: 500, height: 500, background: "rgba(187,0,255,0.08)", borderRadius: "50%", filter: "blur(140px)", zIndex: 0, pointerEvents: "none" }} />
-        <div className="contact-top">
-          <span className="contact-tag">Let's Connect</span>
-          <h2 className="contact-big">
+      <section
+        id="contact"
+        className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden"
+      >
+        {/* Glow Background (B9a kima howa) */}
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 600,
+          height: 600,
+          background: "rgba(187,0,255,0.08)",
+          borderRadius: "50%",
+          filter: "blur(140px)",
+          zIndex: 0,
+          pointerEvents: "none"
+        }} />
+
+        {/* Zidna 'pt-24' aw 'mt-10' bach n-habtouh l-t7t ghir chwiya */}
+        <div className="relative z-10 flex flex-col items-center max-w-4xl pt-24 md:pt-32">
+          <span className="contact-tag mb-6 inline-block px-4 py-1 border border-white/10 rounded-full text-sm uppercase tracking-widest text-[#bb00ff]">
+            Let's Connect
+          </span>
+
+          <h2 className="text-5xl md:text-8xl font-[900] text-white tracking-tighter leading-none mb-8 uppercase">
             Want to<br />
-            <span>Work</span> Together?
+            <span className="text-[#bb00ff]">Work</span> Together?
           </h2>
-          <p className="contact-sub">
+
+          <p className="text-neutral-400 text-lg md:text-2xl font-medium leading-relaxed max-w-2xl mb-12">
             I'm always open to new projects, creative ideas, or opportunities to be part of something great. Let's build something amazing.
           </p>
-          <a href="mailto:fahed@email.com" className="contact-btn">
-            Send a Message →
-          </a>
-        </div>
-        <div className="contact-bottom">
-          <span className="contact-copy">© 2025 Mr Fahed Designer — All rights reserved.</span>
-          <div className="socials">
-            <a href="https://instagram.com/" target="_blank" rel="noreferrer" className="social-link" aria-label="Instagram">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                <circle cx="12" cy="12" r="4" />
-                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-              </svg>
-            </a>
-            <a href="https://tiktok.com/" target="_blank" rel="noreferrer" className="social-link" aria-label="TikTok">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z" />
-              </svg>
-            </a>
-            <a href="https://wa.me/212600000000" target="_blank" rel="noreferrer" className="social-link" aria-label="WhatsApp">
+          <div className="contact-actions">
+            <a href="https://wa.me/" target="_blank" rel="noreferrer" className="contact-btn" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
               </svg>
+              Send a Message
             </a>
           </div>
         </div>
+
+
+
+        <div className="contact-bottom w-full px-6 md:px-12 py-10 flex flex-col md:flex-row items-center justify-between gap-8 border-t border-white/5">
+
+          {/* 1. LEFT: Copyright */}
+          <div className="flex-1 flex justify-start order-2 md:order-1">
+            <span className="contact-copy text-[11px] text-white/40  tracking-widest text-center md:text-left">
+              © 2026 — <span className="text-[#bb00ff] hover:underline" > Graphic Designer </span> & <span className="text-[#bb00ff] hover:underline" >Content Creator</span> · All rights reserved.
+            </span>
+          </div>
+
+          {/* 2. CENTER: Social Icons */}
+          <div className="flex-1 flex items-center justify-center gap-6 order-1 md:order-2">
+
+            {/* WhatsApp - Green Hover */}
+            <a
+              href="https://wa.me/212718982539"
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/50 hover:text-[#25D366] transition-all duration-300 hover:scale-110"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              </svg>
+            </a>
+
+            {/* Instagram - Purple/Pink Hover */}
+            <a
+              href="https://www.instagram.com/mr_fahed_designer/"
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/50 hover:text-[#E4405F] transition-all duration-300 hover:scale-110"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+              </svg>
+            </a>
+
+            {/* TikTok - Cyan/Red Glow */}
+            <a
+              href="https://www.tiktok.com/@fahddesigner19?lang=fr"
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/50 hover:text-[#00f2ea] transition-all duration-300 hover:scale-110 drop-shadow-[0_0_8px_rgba(255,0,80,0.6)]"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.06-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+              </svg>
+            </a>
+
+          </div>
+
+          {/* 3. RIGHT: Developed by */}
+          <div className="flex-1 flex flex-col items-center md:items-end order-3">
+
+            <span className="contact-copy text-[15px] text-white  tracking-widest text-center md:text-right">
+              Designed & Built by <a href="https://instagram.com/ilyass._ag" target="_blank" rel="noreferrer" className="text-[#bb00ff] hover:underline">@ilyass._ag</a>
+            </span>
+          </div>
+
+        </div>
+
       </section>
 
     </main>

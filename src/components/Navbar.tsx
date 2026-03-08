@@ -129,7 +129,7 @@ const Navbar = () => {
         }
       `}</style>
 
-      {/* Desktop */}
+      {/* ── Desktop ── */}
       <div className={`nb-desktop nb-pill${isScrolled ? " scrolled" : ""}`} style={{
         alignItems: "center", justifyContent: "space-between",
         width: "100%", maxWidth: 860, height: 55,
@@ -147,7 +147,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile bar — always blur */}
+      {/* ── Mobile bar — blur dايماً ── */}
       <div className="nb-mobile" style={{
         width: "100%",
         alignItems: "center",
@@ -168,10 +168,23 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile overlay menu */}
+      {/* ── Mobile overlay menu ── */}
       <div className={`nb-overlay${isOpen ? " show" : " hide"}`}>
+        <button
+          onClick={() => setIsOpen(false)}
+          style={{
+            position: "absolute", top: 28, right: 28,
+            background: "rgba(255,255,255,.05)",
+            border: "1px solid rgba(255,255,255,.1)",
+            borderRadius: "50%", padding: 10,
+            color: "white", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+          <X size={22} />
+        </button>
+
         <p style={{
-          color: "rgba(255,255,255,.18)", fontSize: 10, fontWeight: 900,
+          color: "rgba(255,255,255,.18)", fontSize: 10, fontWeight: 700,
           letterSpacing: "0.5em", textTransform: "uppercase",
           marginBottom: 16,
         }}>Navigation</p>
@@ -181,11 +194,11 @@ const Navbar = () => {
             className={`nb-mlink${activeSection === l.id ? " on" : ""}`}
             onClick={() => { setActive(l.id); setIsOpen(false); }}>
             <span style={{
-              fontSize: 10, fontWeight: 900, marginRight: 22,
+              fontSize: 10, fontWeight: 700, marginRight: 22,
               color: activeSection === l.id ? "#bb00ff" : "rgba(255,255,255,.1)",
             }}>{l.num}</span>
             <span style={{
-              fontSize: 17, fontWeight: 900, letterSpacing: "-.04em", textTransform: "uppercase",
+              fontSize: 17, fontWeight: 700, letterSpacing: "-.02em", textTransform: "uppercase",
               color: activeSection === l.id ? "white" : "rgba(255,255,255,.2)",
             }}>{l.name}</span>
           </a>
