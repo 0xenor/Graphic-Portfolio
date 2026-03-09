@@ -89,8 +89,6 @@ const catColors: Record<string, string> = {
 
 export default function Home() {
   const [isVisible, setIsVisible] = useState(false);
-
-  // FIX 1 — Skills: reset animated+counters every time the section enters view
   const [skillsVisible, setSkillsVisible] = useState(false);
   const [animated, setAnimated] = useState(false);
   const [counters, setCounters] = useState<number[]>(skills.map(() => 0));
@@ -101,20 +99,16 @@ export default function Home() {
   const [masonryStyles, setMasonryStyles] = useState<{ top: number; left: number; width: number }[]>([]);
   const [masonryHeight, setMasonryHeight] = useState(0);
 
-  // FIX 1 — Home: key to remount SplitText so animation always reruns
   const [splitKey, setSplitKey] = useState(0);
-
   const aboutRef = useRef<HTMLDivElement>(null);
   const skillsRef = useRef<HTMLDivElement>(null);
   const projRef = useRef<HTMLDivElement>(null);
   const homeRef = useRef<HTMLElement>(null);
 
-  // FIX 1 — Home: re-trigger SplitText animation whenever the home section enters view
   useEffect(() => {
     const homeObserver = new IntersectionObserver(
       ([e]) => {
         if (e.isIntersecting) {
-          // Bump key to remount SplitText components fresh each time
           setSplitKey(k => k + 1);
         }
       },
@@ -131,11 +125,8 @@ export default function Home() {
     );
 
     const o1 = make(() => setIsVisible(true));
-
-    // FIX 2 — Skills: re-run animation every time section enters view (not just first time)
     const o2 = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
-        // Reset first so animation always plays from zero
         setAnimated(false);
         setSkillsVisible(false);
         setCounters(skills.map(() => 0));
@@ -145,7 +136,6 @@ export default function Home() {
           setTimeout(() => setAnimated(true), 400);
 
           skills.forEach((s, i) => {
-            // FIX 2 — slightly slower: 1800ms instead of 1400ms
             const duration = 1800;
             const startTime = performance.now();
             const animateCounter = (now: number) => {
@@ -160,14 +150,12 @@ export default function Home() {
               });
               if (progress < 1) requestAnimationFrame(animateCounter);
             };
-            // FIX 2 — slightly slower stagger: 150ms instead of 120ms
             setTimeout(() => requestAnimationFrame(animateCounter), i * 150 + 300);
           });
         });
       }
     }, { threshold: 0 });
 
-    // FIX 3 — Projects mobile: threshold 0 so title+tabs appear immediately on mobile
     const o3 = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) setProjVisible(true); },
       { threshold: 0, rootMargin: "0px 0px -10px 0px" }
@@ -358,11 +346,8 @@ export default function Home() {
         <Aurora colorStops={["#bb00ff", "#9d04c8", "#e100ff"]} amplitude={1} blend={0.7} />
       </div>
 
-      {/* ── HERO ── */}
-      {/* FIX 1: ref added, splitKey forces remount of SplitText on every entry */}
       <section id="home" ref={homeRef} className="relative z-10 flex flex-col items-center justify-center text-center w-full min-h-screen px-6">
         <div className="w-full max-w-[900px] flex flex-col items-center" style={{ gap: 0, lineHeight: 1.1 }}>
-          {/* FIX 1: key prop remounts component so animation always reruns */}
           <SplitTextComponent key={`hello-${splitKey}`} text="Hello!" className="text-[clamp(3.5rem,12vw,7rem)] font-[900] text-white" delay={320} style={{ letterSpacing: "-0.03em" }} />
           <SplitTextComponent key={`name-${splitKey}`} text="I'm Fahed Hadji" className="text-[clamp(2.2rem,9vw,6rem)] font-[900] text-white" delay={280} style={{ letterSpacing: "-0.03em" }} />
           <div className="flex items-center justify-center" style={{ marginTop: 24, marginBottom: 32 }}>
@@ -375,7 +360,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── ABOUT ── */}
       <section id="about" ref={aboutRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center" style={{ paddingTop: "120px", paddingBottom: "120px" }}>
         <div className="absolute w-[500px] h-[500px] bg-[#bb00ff]/10 blur-[180px] rounded-full -bottom-20 -right-20 -z-10" />
         <div className={`about-grid fade-up ${isVisible ? "visible" : "hidden"}`}>
@@ -404,14 +388,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SKILLS ── */}
       <section id="skills" ref={skillsRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ padding: "80px 48px" }}>
         <div style={{ position: "absolute", bottom: -100, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "rgba(187,0,255,0.07)", borderRadius: "50%", filter: "blur(130px)", zIndex: 0 }} />
         <h2 className="sk-title">My <span style={{ color: "#bb00ff" }}>SKILLS</span></h2>
         <div className="sk-grid">
           {skills.map((s, i) => {
             const R = 56, C = 2 * Math.PI * R;
-            // FIX 2: offset tied to animated state which resets on each entry
             const offset = animated ? C - (s.pct / 100) * C : C;
             return (
               <div key={s.name} className={`sk-card${skillsVisible ? " show" : ""}`} style={{ transitionDelay: `${i * 150}ms` }}>
@@ -434,11 +416,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PROJECTS ── */}
       <section id="projects" ref={projRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center overflow-x-hidden" style={{ padding: "80px 16px" }}>
         <div style={{ position: "absolute", top: -100, right: -100, width: 500, height: 500, background: "rgba(187,0,255,0.06)", borderRadius: "50%", filter: "blur(130px)", zIndex: 0 }} />
 
-        {/* FIX 3: always visible — no fade-up on mobile, just snap in */}
         <h2 className="proj-title" style={{ opacity: projVisible ? 1 : 0, transform: projVisible ? "translateY(0)" : "translateY(40px)", transition: "opacity 1.8s cubic-bezier(0.16,1,0.3,1), transform 1.8s cubic-bezier(0.16,1,0.3,1)" }}>
           My <span style={{ color: "#bb00ff" }}>PROJECTS</span>
         </h2>
@@ -451,7 +431,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Masonry grid */}
         <div ref={masonryRef} className="proj-grid" style={{ maxWidth: 1100, margin: "0 auto", height: masonryHeight || undefined }}>
           {filtered.map((p, i) => (
             <div
@@ -486,7 +465,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* FIX 4: flex-direction row-reverse puts emoji on the right for RTL text */}
         <div className="disclaimer-wrap" style={{ margin: "56px auto 0" }}>
           <span className="disclaimer-emoji">⚠️</span>
           <p
@@ -515,7 +493,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CONTACT ── */}
       <section id="contact" className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
         <div style={{
           position: "absolute", top: "50%", left: "50%",
@@ -547,7 +524,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── FOOTER ── */}
         <div className="contact-bottom w-full px-6 md:px-12 py-10 flex flex-col md:flex-row items-center justify-between gap-8 border-t border-white/5">
           {/* Left: Designer info */}
           <div className="flex-1 flex flex-col items-center md:items-start gap-1 order-2 md:order-1">
@@ -557,7 +533,6 @@ export default function Home() {
             </span>
           </div>
 
-          {/* Center: Social icons */}
           <div className="flex-1 flex items-center justify-center gap-6 order-1 md:order-2">
             <a href="https://wa.me/212718982539" target="_blank" rel="noreferrer"
               className="text-white/50 hover:text-[#25D366] transition-all duration-300 hover:scale-110">
@@ -583,7 +558,6 @@ export default function Home() {
             </a>
           </div>
 
-          {/* Right: Developer credit */}
           <div className="flex-1 flex flex-col items-center md:items-end order-3">
             <span className="contact-copy text-[17px] text-white tracking-widest text-center md:text-right">
               Designed & Built by <a href="https://instagram.com/ilyass._ag" target="_blank" rel="noreferrer" className="text-[#bb00ff] hover:underline">@ilyass._ag</a>
