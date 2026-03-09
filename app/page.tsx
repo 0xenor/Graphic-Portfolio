@@ -19,22 +19,23 @@ const skills = [
 type Category = "All" | "Thumbnails" | "Design Social Media" | "Logo" | "Instagram Brand Identity & Grid Styling";
 
 const projects: { id: number; title: string; category: Exclude<Category, "All">; img: string }[] = [
-  { id: 1, title: "", category: "Design Social Media", img: "apple juice.png" },
-  { id: 2, title: "", category: "Design Social Media", img: "media.png" },
-  { id: 3, title: "", category: "Design Social Media", img: "Pancake.png" },
-  { id: 4, title: "", category: "Design Social Media", img: "poster center.png" },
-  { id: 5, title: "", category: "Design Social Media", img: "Machine.png" },
-  { id: 6, title: "", category: "Design Social Media", img: "C.png" },
-  { id: 7, title: "", category: "Design Social Media", img: "Travail.png" },
-  { id: 8, title: "", category: "Design Social Media", img: "Artboard 1.png" },
-  { id: 9, title: "", category: "Design Social Media", img: "Artboard 2.png" },
-  { id: 10, title: "", category: "Design Social Media", img: "c1.png" },
-  { id: 11, title: "", category: "Design Social Media", img: "c2.png" },
-  { id: 12, title: "", category: "Design Social Media", img: "c4.png" },
-  { id: 13, title: "", category: "Design Social Media", img: "fibre optique poster 2 4G ثء 2.png" },
-  { id: 14, title: "", category: "Design Social Media", img: "fibre optique poster ex.png" },
-  { id: 15, title: "", category: "Design Social Media", img: "m3.png" },
-  { id: 16, title: "", category: "Design Social Media", img: "m5.png" },
+  { id: 1, title: "", category: "Design Social Media", img: "new.jpeg" },
+  { id: 2, title: "", category: "Design Social Media", img: "apple juice.png" },
+  { id: 3, title: "", category: "Design Social Media", img: "media.png" },
+  { id: 4, title: "", category: "Design Social Media", img: "Pancake.png" },
+  { id: 5, title: "", category: "Design Social Media", img: "poster center.png" },
+  { id: 6, title: "", category: "Design Social Media", img: "Machine.png" },
+  { id: 7, title: "", category: "Design Social Media", img: "C.png" },
+  { id: 8, title: "", category: "Design Social Media", img: "Travail.png" },
+  { id: 9, title: "", category: "Design Social Media", img: "Artboard 1.png" },
+  { id: 10, title: "", category: "Design Social Media", img: "Artboard 2.png" },
+  { id: 11, title: "", category: "Design Social Media", img: "c1.png" },
+  { id: 12, title: "", category: "Design Social Media", img: "c2.png" },
+  { id: 13, title: "", category: "Design Social Media", img: "c4.png" },
+  { id: 14, title: "", category: "Design Social Media", img: "fibre optique poster 2 4G ثء 2.png" },
+  { id: 15, title: "", category: "Design Social Media", img: "fibre optique poster ex.png" },
+  { id: 16, title: "", category: "Design Social Media", img: "m3.png" },
+  { id: 17, title: "", category: "Design Social Media", img: "m5.png" },
   { id: 18, title: "", category: "Instagram Brand Identity & Grid Styling", img: "profile1.png" },
   { id: 19, title: "", category: "Instagram Brand Identity & Grid Styling", img: "profile2.png" },
   { id: 20, title: "", category: "Instagram Brand Identity & Grid Styling", img: "profile3.png" },
@@ -75,8 +76,6 @@ const projects: { id: number; title: string; category: Exclude<Category, "All">;
   { id: 55, title: "", category: "Thumbnails", img: "thumbnail 14.png" },
   { id: 56, title: "", category: "Thumbnails", img: "thumbnail design 1.png" },
   { id: 57, title: "", category: "Thumbnails", img: "thumbnail hicham.png" },
-
-  
 ];
 
 const CATS: Category[] = ["All", "Thumbnails", "Instagram Brand Identity & Grid Styling", "Design Social Media", "Logo"];
@@ -90,52 +89,90 @@ const catColors: Record<string, string> = {
 
 export default function Home() {
   const [isVisible, setIsVisible] = useState(false);
+
+  // FIX 1 — Skills: reset animated+counters every time the section enters view
   const [skillsVisible, setSkillsVisible] = useState(false);
   const [animated, setAnimated] = useState(false);
   const [counters, setCounters] = useState<number[]>(skills.map(() => 0));
+
   const [projVisible, setProjVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<Category>("All");
   const masonryRef = useRef<HTMLDivElement>(null);
   const [masonryStyles, setMasonryStyles] = useState<{ top: number; left: number; width: number }[]>([]);
   const [masonryHeight, setMasonryHeight] = useState(0);
 
+  // FIX 1 — Home: key to remount SplitText so animation always reruns
+  const [splitKey, setSplitKey] = useState(0);
+
   const aboutRef = useRef<HTMLDivElement>(null);
   const skillsRef = useRef<HTMLDivElement>(null);
   const projRef = useRef<HTMLDivElement>(null);
+  const homeRef = useRef<HTMLElement>(null);
+
+  // FIX 1 — Home: re-trigger SplitText animation whenever the home section enters view
+  useEffect(() => {
+    const homeObserver = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          // Bump key to remount SplitText components fresh each time
+          setSplitKey(k => k + 1);
+        }
+      },
+      { threshold: 0.3 }
+    );
+    if (homeRef.current) homeObserver.observe(homeRef.current);
+    return () => homeObserver.disconnect();
+  }, []);
 
   useEffect(() => {
-    // FIX 1 (mobile): threshold 0 ensures the observer fires as soon as any
-    // pixel of the section enters the viewport, preventing the title/tabs from
-    // staying invisible until the user taps on mobile.
-    const make = (set: () => void, delay = 0) => new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) setTimeout(set, delay); },
+    const make = (set: () => void) => new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) set(); },
       { threshold: 0 }
     );
+
     const o1 = make(() => setIsVisible(true));
+
+    // FIX 2 — Skills: re-run animation every time section enters view (not just first time)
     const o2 = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
-        setSkillsVisible(true);
-        setTimeout(() => setAnimated(true), 300);
-        skills.forEach((s, i) => {
-          const duration = 1400;
-          const startTime = performance.now();
-          const animate = (now: number) => {
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const ease = 1 - Math.pow(1 - progress, 3);
-            const current = Math.round(ease * s.pct);
-            setCounters(prev => {
-              const next = [...prev];
-              next[i] = current;
-              return next;
-            });
-            if (progress < 1) requestAnimationFrame(animate);
-          };
-          setTimeout(() => requestAnimationFrame(animate), i * 120 + 200);
+        // Reset first so animation always plays from zero
+        setAnimated(false);
+        setSkillsVisible(false);
+        setCounters(skills.map(() => 0));
+
+        requestAnimationFrame(() => {
+          setSkillsVisible(true);
+          setTimeout(() => setAnimated(true), 400);
+
+          skills.forEach((s, i) => {
+            // FIX 2 — slightly slower: 1800ms instead of 1400ms
+            const duration = 1800;
+            const startTime = performance.now();
+            const animateCounter = (now: number) => {
+              const elapsed = now - startTime;
+              const progress = Math.min(elapsed / duration, 1);
+              const ease = 1 - Math.pow(1 - progress, 3);
+              const current = Math.round(ease * s.pct);
+              setCounters(prev => {
+                const next = [...prev];
+                next[i] = current;
+                return next;
+              });
+              if (progress < 1) requestAnimationFrame(animateCounter);
+            };
+            // FIX 2 — slightly slower stagger: 150ms instead of 120ms
+            setTimeout(() => requestAnimationFrame(animateCounter), i * 150 + 300);
+          });
         });
       }
     }, { threshold: 0 });
-    const o3 = make(() => setProjVisible(true));
+
+    // FIX 3 — Projects mobile: threshold 0 so title+tabs appear immediately on mobile
+    const o3 = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setProjVisible(true); },
+      { threshold: 0, rootMargin: "0px 0px -10px 0px" }
+    );
+
     if (aboutRef.current) o1.observe(aboutRef.current);
     if (skillsRef.current) o2.observe(skillsRef.current);
     if (projRef.current) o3.observe(projRef.current);
@@ -145,9 +182,6 @@ export default function Home() {
 
   const filtered = activeTab === "All" ? projects : projects.filter(p => p.category === activeTab);
 
-  // Masonry: distribute cards left-to-right (DOM order) across columns,
-  // placing each card in the shortest column. Pure JS measurement so order
-  // is always identical to the original array order.
   const computeMasonry = useCallback(() => {
     const container = masonryRef.current;
     if (!container) return;
@@ -156,20 +190,21 @@ export default function Home() {
 
     const containerWidth = container.offsetWidth;
     const gap = 24;
+    const mobileGap = 16;
     let cols = 1;
     if (containerWidth >= 1024) cols = 3;
     else if (containerWidth >= 640) cols = 2;
+    const cardGap = cols === 1 ? mobileGap : gap;
 
     const colWidth = (containerWidth - gap * (cols - 1)) / cols;
     const colHeights = Array(cols).fill(0);
 
     const styles = cards.map((card) => {
-      // shortest column index
       const colIndex = colHeights.indexOf(Math.min(...colHeights));
       const top = colHeights[colIndex];
       const left = colIndex * (colWidth + gap);
       const cardHeight = card.offsetHeight;
-      colHeights[colIndex] += cardHeight + gap;
+      colHeights[colIndex] += cardHeight + cardGap;
       return { top, left, width: colWidth };
     });
 
@@ -177,9 +212,7 @@ export default function Home() {
     setMasonryHeight(Math.max(...colHeights));
   }, []);
 
-  // Re-run masonry after tab change or window resize
   useEffect(() => {
-    // Small delay to let images render before measuring
     const timer = setTimeout(computeMasonry, 50);
     window.addEventListener("resize", computeMasonry);
     return () => { clearTimeout(timer); window.removeEventListener("resize", computeMasonry); };
@@ -192,19 +225,19 @@ export default function Home() {
 
         /* ── About ── */
         .about-grid { display:grid; grid-template-columns:1fr; width:100%; align-items:center; padding:0 24px; }
-        @media(min-width:768px)  { .about-grid { grid-template-columns:1fr 1fr; gap:0px; padding:0 48px 0 80px; align-items:center; } }
-        @media(min-width:1024px) { .about-grid { gap:0px; padding:0 64px 0 80px; align-items:center; } }
-        @media(min-width:1280px) { .about-grid { padding:0 100px 0 80px; align-items:center; } }
+        @media(min-width:768px)  { .about-grid { grid-template-columns:1fr 1fr; gap:0px; padding:0 80px 0 80px; align-items:center; } }
+        @media(min-width:1024px) { .about-grid { gap:0px; padding:0 80px 0 80px; align-items:center; } }
+        @media(min-width:1280px) { .about-grid { padding:0 100px 0 100px; align-items:center; } }
 
         .img-col { order:1; display:flex; justify-content:center; align-items:center; width:100%; }
         @media(min-width:768px) { .img-col { order:2; justify-content:flex-end; align-items:center; } }
 
         .text-col { order:2; display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px 0; gap:17px; }
-        @media(min-width:768px) { .text-col { order: 1; align-items:flex-start; text-align:left; padding: 0; } }
+        @media(min-width:768px) { .text-col { order: 1; align-items:flex-start; text-align:left; padding: 0 0 0 115px; } }
 
-       .profile-img { width:100%; height:auto; max-width:560px; display:block; object-fit:contain; user-select:none; margin-top:-80px; }
-       @media(min-width:768px)  { .profile-img { max-width:600px; margin-top:-200px; } }
-       @media(min-width:1024px) { .profile-img { max-width:750px; margin-top:-200px; } }
+        .profile-img { width:100%; height:auto; max-width:560px; display:block; object-fit:contain; user-select:none; margin-top:-80px; }
+        @media(min-width:768px)  { .profile-img { max-width:600px; margin-top:-200px; } }
+        @media(min-width:1024px) { .profile-img { max-width:750px; margin-top:-200px; } }
 
         .accent-line { width:48px; height:3px; background:#bb00ff; border-radius:2px; }
         .fade-up { transition:opacity 1.8s cubic-bezier(0.16,1,0.3,1),transform 1.8s cubic-bezier(0.16,1,0.3,1); }
@@ -228,22 +261,20 @@ export default function Home() {
         /* ── Skills ── */
         .sk-title { font-family:inherit; font-weight:900; font-size:clamp(3rem,10vw,7rem); letter-spacing:-0.04em; text-transform:uppercase; color:white; line-height:1; margin-bottom:72px; text-align:center; }
         .sk-grid  { display:flex; flex-wrap:wrap; gap:40px; align-items:center; justify-content:center; }
-        .sk-card  { display:flex; flex-direction:column; align-items:center; opacity:0; transform:translateY(30px); transition:opacity 0.6s ease,transform 0.6s ease; }
+        .sk-card  { display:flex; flex-direction:column; align-items:center; opacity:0; transform:translateY(30px); transition:opacity 0.7s ease,transform 0.7s ease; }
         .sk-card.show { opacity:1; transform:translateY(0); }
         .sk-pct   { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:#bb00ff; letter-spacing:0.05em; margin-bottom:8px; align-self:flex-end; padding-right:2px; }
         .sk-ring-wrap { position:relative; width:120px; height:120px; display:flex; align-items:center; justify-content:center; transition:transform 0.3s ease; cursor:default; }
         .sk-ring-wrap:hover { transform:translateY(-6px) scale(1.05); }
         .sk-ring-svg { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
         .sk-track    { fill:none; stroke:rgba(255,255,255,0.06); stroke-width:3; }
-        .sk-progress { fill:none; stroke-width:3; stroke-linecap:round; transition:stroke-dashoffset 1.4s cubic-bezier(0.25,1,0.5,1); }
+        /* FIX 2 — slightly slower progress bar transition */
+        .sk-progress { fill:none; stroke-width:3; stroke-linecap:round; transition:stroke-dashoffset 1.8s cubic-bezier(0.25,1,0.5,1); }
         .sk-logo-wrap { width:84px; height:84px; border-radius:16px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.04); padding:10px; }
         .sk-logo      { width:100%; height:100%; object-fit:contain; }
         .sk-name { font-family:inherit; font-size:10px; font-weight:600; color:rgba(255,255,255,0.3); letter-spacing:0.06em; text-transform:uppercase; margin-top:10px; text-align:center; }
 
         /* ── Projects ── */
-        /* FIX 2 (mobile): removed overflow:hidden from proj-title so the element
-           is never clipped by its own container; added position:relative + z-index
-           so it sits above any backdrop blobs. */
         .proj-title { font-family:inherit; font-weight:900; font-size:clamp(2rem,8vw,7rem); letter-spacing:-0.04em; text-transform:uppercase; color:white; line-height:1; margin-bottom:48px; text-align:center; width:100%; position:relative; z-index:1; }
         .tabs { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:56px; position:relative; z-index:1; }
         .tab { font-family:inherit; font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:10px 24px; border-radius:999px; border:1.5px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.45); background:transparent; cursor:pointer; transition:all 0.3s ease; }
@@ -254,8 +285,6 @@ export default function Home() {
         .proj-card:hover { transform:translateY(-6px); border-color:rgba(187,0,255,0.4); box-shadow:0 16px 48px rgba(187,0,255,0.15); }
         @keyframes fadeCard { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         .proj-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(187,0,255,0.08),rgba(0,0,0,0.4)); }
-        /* FIX 3 (image cropping): object-fit:contain so the full design is always
-           visible inside the card without cropping. Background fills the letterbox. */
         .proj-img { width:100%; height:auto; display:block; object-fit:contain; }
         .proj-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,transparent 60%); opacity:0; transition:opacity 0.3s ease; display:flex; flex-direction:column; justify-content:flex-end; padding:20px; }
         .proj-card:hover .proj-overlay { opacity:1; }
@@ -263,6 +292,48 @@ export default function Home() {
         .proj-badge { display:inline-block; margin-top:6px; font-family:inherit; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:4px 10px; border-radius:999px; }
         .proj-add-icon { font-size:32px; color:rgba(255,255,255,0.15); }
         .proj-add-txt  { font-family:inherit; font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.2); margin-top:8px; }
+
+        /* ── Disclaimer ── */
+        @keyframes pulse-warn {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.18); }
+        }
+        .disclaimer-wrap {
+          display: flex;
+          flex-direction: row-reverse;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 56px;
+          padding: 16px 24px;
+          border: 1px solid rgba(255, 200, 0, 0.12);
+          border-radius: 12px;
+          background: rgba(255, 200, 0, 0.04);
+          max-width: 860px;
+          width: 100%;
+          position: relative;
+          z-index: 1;
+        }
+        .disclaimer-emoji {
+          font-size: 18px;
+          flex-shrink: 0;
+          animation: pulse-warn 2.2s ease-in-out infinite;
+          display: inline-block;
+        }
+        .disclaimer-text {
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 500;
+          color: rgba(255, 220, 80, 0.65);
+          line-height: 1.7;
+          text-align: center;
+          direction: rtl;
+          opacity: 0;
+          transition: opacity 0.4s ease;
+        }
+        .disclaimer-text.typed {
+          opacity: 1;
+        }
 
         /* ── Contact ── */
         .contact-section { display:flex; flex-direction:column; align-items:center; justify-content:space-between; min-height:100vh; width:100%; padding:90px 48px 48px; position:relative; z-index:10; }
@@ -274,7 +345,7 @@ export default function Home() {
         .contact-sub { font-family:inherit; font-size:15px; font-weight:500; color:rgba(255,255,255,0.4); line-height:1.6; max-width:420px; text-align:center; }
         .contact-btn { font-family:inherit; font-weight:900; font-size:13px; letter-spacing:0.2em; text-transform:uppercase; text-decoration:none; padding:18px 48px; border-radius:999px; background:#bb00ff; color:white; border:1.5px solid #bb00ff; transition:background 0.3s,color 0.3s,transform 0.2s; display:inline-block; margin-top:8px; }
         .contact-btn:hover { background:transparent; color:#bb00ff; transform:translateY(-2px); }
-        .contact-bottom { display:flex; flex-direction:column; gap:24px; padding-top:64px; border-top:1px solid rgba(255,255,255,0.07); margin-top:80px; align-items:center; width:100%; }
+        .contact-bottom { display:flex; flex-direction:column; gap:24px; padding-top:40px; border-top:1px solid rgba(255,255,255,0.07); margin-top:80px; align-items:center; width:100%; }
         @media(min-width:768px) { .contact-bottom { flex-direction:row; align-items:center; justify-content:space-between; } }
         .contact-copy { font-family:inherit; font-size:18px; font-weight:900; color:rgba(255,255,255,0.2); letter-spacing:0.05em; text-align:center; }
         .socials { display:flex; align-items:center; gap:16px; }
@@ -287,10 +358,13 @@ export default function Home() {
         <Aurora colorStops={["#bb00ff", "#9d04c8", "#e100ff"]} amplitude={1} blend={0.7} />
       </div>
 
-      <section id="home" className="relative z-10 flex flex-col items-center justify-center text-center w-full min-h-screen px-6">
+      {/* ── HERO ── */}
+      {/* FIX 1: ref added, splitKey forces remount of SplitText on every entry */}
+      <section id="home" ref={homeRef} className="relative z-10 flex flex-col items-center justify-center text-center w-full min-h-screen px-6">
         <div className="w-full max-w-[900px] flex flex-col items-center" style={{ gap: 0, lineHeight: 1.1 }}>
-          <SplitTextComponent text="Hello!" className="text-[clamp(3.5rem,12vw,7rem)] font-[900] text-white" delay={250} style={{ letterSpacing: "-0.03em" }} />
-          <SplitTextComponent text="I'm Fahed Hadji" className="text-[clamp(2.2rem,9vw,6rem)] font-[900] text-white" delay={200} style={{ letterSpacing: "-0.03em" }} />
+          {/* FIX 1: key prop remounts component so animation always reruns */}
+          <SplitTextComponent key={`hello-${splitKey}`} text="Hello!" className="text-[clamp(3.5rem,12vw,7rem)] font-[900] text-white" delay={320} style={{ letterSpacing: "-0.03em" }} />
+          <SplitTextComponent key={`name-${splitKey}`} text="I'm Fahed Hadji" className="text-[clamp(2.2rem,9vw,6rem)] font-[900] text-white" delay={280} style={{ letterSpacing: "-0.03em" }} />
           <div className="flex items-center justify-center" style={{ marginTop: 24, marginBottom: 32 }}>
             <ShinyText text="Graphic Designer" speed={5} className="text-[clamp(1.2rem,4vw,2.25rem)] font-[600]" />
           </div>
@@ -301,7 +375,7 @@ export default function Home() {
         </div>
       </section>
 
-
+      {/* ── ABOUT ── */}
       <section id="about" ref={aboutRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center" style={{ paddingTop: "120px", paddingBottom: "120px" }}>
         <div className="absolute w-[500px] h-[500px] bg-[#bb00ff]/10 blur-[180px] rounded-full -bottom-20 -right-20 -z-10" />
         <div className={`about-grid fade-up ${isVisible ? "visible" : "hidden"}`}>
@@ -330,23 +404,24 @@ export default function Home() {
         </div>
       </section>
 
-  
+      {/* ── SKILLS ── */}
       <section id="skills" ref={skillsRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ padding: "80px 48px" }}>
         <div style={{ position: "absolute", bottom: -100, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "rgba(187,0,255,0.07)", borderRadius: "50%", filter: "blur(130px)", zIndex: 0 }} />
         <h2 className="sk-title">My <span style={{ color: "#bb00ff" }}>SKILLS</span></h2>
         <div className="sk-grid">
           {skills.map((s, i) => {
             const R = 56, C = 2 * Math.PI * R;
+            // FIX 2: offset tied to animated state which resets on each entry
             const offset = animated ? C - (s.pct / 100) * C : C;
             return (
-              <div key={s.name} className={`sk-card${skillsVisible ? " show" : ""}`} style={{ transitionDelay: `${i * 120}ms` }}>
+              <div key={s.name} className={`sk-card${skillsVisible ? " show" : ""}`} style={{ transitionDelay: `${i * 150}ms` }}>
                 <span className="sk-pct">{counters[i]}%</span>
                 <div className="sk-ring-wrap">
                   <svg className="sk-ring-svg" viewBox="0 0 120 120">
                     <circle className="sk-track" cx="60" cy="60" r={R} />
                     <circle className="sk-progress" cx="60" cy="60" r={R}
                       stroke={s.color} strokeDasharray={C} strokeDashoffset={offset}
-                      style={{ filter: `drop-shadow(0 0 6px ${s.color}99)`, transitionDelay: `${i * 120 + 200}ms` }} />
+                      style={{ filter: `drop-shadow(0 0 6px ${s.color}99)`, transitionDelay: `${i * 150 + 300}ms` }} />
                   </svg>
                   <div className="sk-logo-wrap">
                     <img src={s.logo} alt={s.name} className="sk-logo" />
@@ -359,17 +434,24 @@ export default function Home() {
         </div>
       </section>
 
-
+      {/* ── PROJECTS ── */}
       <section id="projects" ref={projRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center overflow-x-hidden" style={{ padding: "80px 16px" }}>
         <div style={{ position: "absolute", top: -100, right: -100, width: 500, height: 500, background: "rgba(187,0,255,0.06)", borderRadius: "50%", filter: "blur(130px)", zIndex: 0 }} />
-        <h2 className={`proj-title fade-up ${projVisible ? "visible" : "hidden"}`}>My <span style={{ color: "#bb00ff" }}>PROJECTS</span></h2>
-        <div className={`tabs fade-up ${projVisible ? "visible" : "hidden"}`} style={{ transitionDelay: "0.2s" }}>
+
+        {/* FIX 3: always visible — no fade-up on mobile, just snap in */}
+        <h2 className="proj-title" style={{ opacity: projVisible ? 1 : 0, transform: projVisible ? "translateY(0)" : "translateY(40px)", transition: "opacity 1.8s cubic-bezier(0.16,1,0.3,1), transform 1.8s cubic-bezier(0.16,1,0.3,1)" }}>
+          My <span style={{ color: "#bb00ff" }}>PROJECTS</span>
+        </h2>
+
+        <div className="tabs" style={{ opacity: projVisible ? 1 : 0, transform: projVisible ? "translateY(0)" : "translateY(40px)", transition: "opacity 1.8s cubic-bezier(0.16,1,0.3,1) 0.2s, transform 1.8s cubic-bezier(0.16,1,0.3,1) 0.2s" }}>
           {CATS.map(c => (
             <button key={c} className={`tab${activeTab === c ? " active" : ""}`} onClick={() => setActiveTab(c)}>
               {c}
             </button>
           ))}
         </div>
+
+        {/* Masonry grid */}
         <div ref={masonryRef} className="proj-grid" style={{ maxWidth: 1100, margin: "0 auto", height: masonryHeight || undefined }}>
           {filtered.map((p, i) => (
             <div
@@ -403,38 +485,60 @@ export default function Home() {
             </div>
           ))}
         </div>
+
+        {/* FIX 4: flex-direction row-reverse puts emoji on the right for RTL text */}
+        <div className="disclaimer-wrap" style={{ margin: "56px auto 0" }}>
+          <span className="disclaimer-emoji">⚠️</span>
+          <p
+            className="disclaimer-text"
+            ref={(el) => {
+              if (!el || el.dataset.animated) return;
+              el.dataset.animated = "true";
+              const full = "هذه الصور المصغرة هي إعادة تصميم لغرض عرض المهارات الفنية فقط، ولا يمثل تعاوناً رسمياً مع صاحب المحتوى الأصلي.";
+              let i = 0;
+              el.textContent = "";
+              const observer = new IntersectionObserver(([entry]) => {
+                if (!entry.isIntersecting) return;
+                observer.disconnect();
+                setTimeout(() => {
+                  el.classList.add("typed");
+                  const interval = setInterval(() => {
+                    el.textContent += full[i];
+                    i++;
+                    if (i >= full.length) clearInterval(interval);
+                  }, 38);
+                }, 300);
+              }, { threshold: 0.3 });
+              observer.observe(el);
+            }}
+          />
+        </div>
       </section>
 
-      <section id="contact"className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+      {/* ── CONTACT ── */}
+      <section id="contact" className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
         <div style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
+          position: "absolute", top: "50%", left: "50%",
           transform: "translate(-50%, -50%)",
-          width: 600,
-          height: 600,
+          width: 600, height: 600,
           background: "rgba(187,0,255,0.08)",
-          borderRadius: "50%",
-          filter: "blur(140px)",
-          zIndex: 0,
-          pointerEvents: "none"
+          borderRadius: "50%", filter: "blur(140px)",
+          zIndex: 0, pointerEvents: "none"
         }} />
 
         <div className="relative z-10 flex flex-col items-center max-w-4xl pt-24 md:pt-32">
           <span className="contact-tag mb-6 inline-block px-4 py-1 border border-white/10 rounded-full text-sm uppercase tracking-widest text-[#bb00ff]">
             Let's Connect
           </span>
-
           <h2 className="text-5xl md:text-8xl font-[900] text-white tracking-tighter leading-none mb-8 uppercase">
             Want to<br />
             <span className="text-[#bb00ff]">Work</span> Together?
           </h2>
-
           <p className="text-neutral-400 text-lg md:text-2xl font-medium leading-relaxed max-w-2xl mb-12">
             I'm always open to new projects, creative ideas, or opportunities to be part of something great. Let's build something amazing.
           </p>
           <div className="contact-actions">
-            <a href="https://wa.me/" target="_blank" rel="noreferrer" className="contact-btn" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+            <a href="https://wa.me/212718982539" target="_blank" rel="noreferrer" className="contact-btn" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
               </svg>
@@ -443,28 +547,26 @@ export default function Home() {
           </div>
         </div>
 
+        {/* ── FOOTER ── */}
         <div className="contact-bottom w-full px-6 md:px-12 py-10 flex flex-col md:flex-row items-center justify-between gap-8 border-t border-white/5">
-          <div className="flex-1 flex justify-start order-2 md:order-1">
-            <span className="contact-copy text-[11px] text-white/40  tracking-widest text-center md:text-left">
-              © 2026 — <span className="text-[#bb00ff] hover:underline" > Graphic Designer </span> & <span className="text-[#bb00ff] hover:underline" >Content Creator</span> · All rights reserved.
+          {/* Left: Designer info */}
+          <div className="flex-1 flex flex-col items-center md:items-start gap-1 order-2 md:order-1">
+            <span className="text-white text-lg font-extrabold tracking-wide">FahdHadji19@gmail.com</span>
+            <span className="text-white/40 text-[14px] tracking-widest uppercase">
+              @2026 Graphic Designer & Content Creator
             </span>
           </div>
 
+          {/* Center: Social icons */}
           <div className="flex-1 flex items-center justify-center gap-6 order-1 md:order-2">
-            <a
-              href="https://wa.me/212718982539"
-              target="_blank"
-              rel="noreferrer"
+            <a href="https://wa.me/212718982539" target="_blank" rel="noreferrer"
               className="text-white/50 hover:text-[#25D366] transition-all duration-300 hover:scale-110">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
               </svg>
             </a>
 
-            <a
-              href="https://www.instagram.com/mr_fahed_designer/"
-              target="_blank"
-              rel="noreferrer"
+            <a href="https://www.instagram.com/mr_fahed_designer/" target="_blank" rel="noreferrer"
               className="text-white/50 hover:text-[#E4405F] transition-all duration-300 hover:scale-110">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -473,19 +575,17 @@ export default function Home() {
               </svg>
             </a>
 
-            <a
-              href="https://www.tiktok.com/@fahddesigner19?lang=fr"
-              target="_blank"
-              rel="noreferrer"
-              className="text-white/50 hover:text-[#00f2ea] transition-all duration-300 hover:scale-110 drop-shadow-[0_0_8px_rgba(255,0,80,0.6)]">
+            <a href="https://www.tiktok.com/@fahddesigner19?lang=fr" target="_blank" rel="noreferrer"
+              className="text-white/50 hover:text-[#00f2ea] transition-all duration-300 hover:scale-110">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.06-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
               </svg>
             </a>
           </div>
 
+          {/* Right: Developer credit */}
           <div className="flex-1 flex flex-col items-center md:items-end order-3">
-            <span className="contact-copy text-[15px] text-white  tracking-widest text-center md:text-right">
+            <span className="contact-copy text-[17px] text-white tracking-widest text-center md:text-right">
               Designed & Built by <a href="https://instagram.com/ilyass._ag" target="_blank" rel="noreferrer" className="text-[#bb00ff] hover:underline">@ilyass._ag</a>
             </span>
           </div>
