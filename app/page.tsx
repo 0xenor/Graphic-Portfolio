@@ -87,87 +87,137 @@ const catColors: Record<string, string> = {
   "Logo": "#FF9A00",
 };
 
+// Helper: runs a cubic-ease counter from 0 → target over `duration` ms
+function runCounter(
+  target: number,
+  duration: number,
+  onTick: (val: number) => void
+) {
+  const start = performance.now();
+  const tick = (now: number) => {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    onTick(Math.round(ease * target));
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
 export default function Home() {
-  const [isVisible, setIsVisible] = useState(false);
+  // ── Home ──────────────────────────────────────────────────────────────────
+  // splitKey is bumped every time the home section enters view so SplitText
+  // components are fully remounted and their animation always replays.
+  const [splitKey, setSplitKey] = useState(0);
+
+  // ── About ─────────────────────────────────────────────────────────────────
+  // aboutVisible resets to false whenever the section leaves view so the
+  // fade-slide animation replays each time it comes back into view.
+  const [aboutVisible, setAboutVisible] = useState(false);
+
+  // ── Skills ────────────────────────────────────────────────────────────────
   const [skillsVisible, setSkillsVisible] = useState(false);
   const [animated, setAnimated] = useState(false);
   const [counters, setCounters] = useState<number[]>(skills.map(() => 0));
 
+  // ── Projects ──────────────────────────────────────────────────────────────
   const [projVisible, setProjVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<Category>("All");
   const masonryRef = useRef<HTMLDivElement>(null);
   const [masonryStyles, setMasonryStyles] = useState<{ top: number; left: number; width: number }[]>([]);
   const [masonryHeight, setMasonryHeight] = useState(0);
 
-  const [splitKey, setSplitKey] = useState(0);
+  const homeRef  = useRef<HTMLElement>(null);
   const aboutRef = useRef<HTMLDivElement>(null);
   const skillsRef = useRef<HTMLDivElement>(null);
-  const projRef = useRef<HTMLDivElement>(null);
-  const homeRef = useRef<HTMLElement>(null);
+  const projRef  = useRef<HTMLDivElement>(null);
 
+  // ── Home observer ─────────────────────────────────────────────────────────
+  // threshold: 0.3 → fires when 30 % of the hero is visible (covers navbar
+  // click and scroll-back). We do NOT disconnect so it re-fires every visit.
   useEffect(() => {
-    const homeObserver = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
-          setSplitKey(k => k + 1);
-        }
-      },
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setSplitKey(k => k + 1); },
       { threshold: 0.3 }
     );
-    if (homeRef.current) homeObserver.observe(homeRef.current);
-    return () => homeObserver.disconnect();
+    if (homeRef.current) obs.observe(homeRef.current);
+    return () => obs.disconnect();
   }, []);
 
+  // ── About observer ────────────────────────────────────────────────────────
+  // Resets when the section leaves so the animation replays on every visit.
   useEffect(() => {
-    const make = (set: () => void) => new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) set(); },
-      { threshold: 0 }
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setAboutVisible(true);
+        } else {
+          // reset so it re-animates next time
+          setAboutVisible(false);
+        }
+      },
+      { threshold: 0.15 }
     );
+    if (aboutRef.current) obs.observe(aboutRef.current);
+    return () => obs.disconnect();
+  }, []);
 
-    const o1 = make(() => setIsVisible(true));
-    const o2 = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        setAnimated(false);
-        setSkillsVisible(false);
-        setCounters(skills.map(() => 0));
+  // ── Skills observer ───────────────────────────────────────────────────────
+  // Fully resets state to zero then re-runs everything each time the section
+  // enters view. NOT disconnected so it fires on every visit.
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          // 1. snap everything back to zero immediately
+          setAnimated(false);
+          setSkillsVisible(false);
+          setCounters(skills.map(() => 0));
 
-        requestAnimationFrame(() => {
-          setSkillsVisible(true);
-          setTimeout(() => setAnimated(true), 400);
+          // 2. one frame later, kick off the enter-animations
+          requestAnimationFrame(() => {
+            setSkillsVisible(true);
 
-          skills.forEach((s, i) => {
-            const duration = 1800;
-            const startTime = performance.now();
-            const animateCounter = (now: number) => {
-              const elapsed = now - startTime;
-              const progress = Math.min(elapsed / duration, 1);
-              const ease = 1 - Math.pow(1 - progress, 3);
-              const current = Math.round(ease * s.pct);
-              setCounters(prev => {
-                const next = [...prev];
-                next[i] = current;
-                return next;
-              });
-              if (progress < 1) requestAnimationFrame(animateCounter);
-            };
-            setTimeout(() => requestAnimationFrame(animateCounter), i * 150 + 300);
+            // progress rings start after the card fade-in delay
+            setTimeout(() => setAnimated(true), 400);
+
+            // number counters – staggered to match the ring transition-delay
+            skills.forEach((s, i) => {
+              setTimeout(
+                () => runCounter(s.pct, 1800, (val) =>
+                  setCounters(prev => {
+                    const next = [...prev];
+                    next[i] = val;
+                    return next;
+                  })
+                ),
+                i * 150 + 300
+              );
+            });
           });
-        });
-      }
-    }, { threshold: 0 });
+        } else {
+          // reset when leaving so next entry starts from zero
+          setAnimated(false);
+          setSkillsVisible(false);
+          setCounters(skills.map(() => 0));
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (skillsRef.current) obs.observe(skillsRef.current);
+    return () => obs.disconnect();
+  }, []);
 
-    const o3 = new IntersectionObserver(
+  // ── Projects observer ─────────────────────────────────────────────────────
+  useEffect(() => {
+    const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) setProjVisible(true); },
       { threshold: 0, rootMargin: "0px 0px -10px 0px" }
     );
-
-    if (aboutRef.current) o1.observe(aboutRef.current);
-    if (skillsRef.current) o2.observe(skillsRef.current);
-    if (projRef.current) o3.observe(projRef.current);
-
-    return () => { o1.disconnect(); o2.disconnect(); o3.disconnect(); };
+    if (projRef.current) obs.observe(projRef.current);
+    return () => obs.disconnect();
   }, []);
 
+  // ── Masonry ───────────────────────────────────────────────────────────────
   const filtered = activeTab === "All" ? projects : projects.filter(p => p.category === activeTab);
 
   const computeMasonry = useCallback(() => {
@@ -228,6 +278,21 @@ export default function Home() {
         @media(min-width:1024px) { .profile-img { max-width:750px; margin-top:-200px; } }
 
         .accent-line { width:48px; height:3px; background:#bb00ff; border-radius:2px; }
+
+        /* ── About animation ── */
+        /* Each child of about-grid that carries .about-animate slides up and
+           fades in. The transition is driven by the .in class toggled via React. */
+        .about-animate {
+          opacity: 0;
+          transform: translateY(36px);
+          transition: opacity 1s cubic-bezier(0.16,1,0.3,1),
+                      transform 1s cubic-bezier(0.16,1,0.3,1);
+        }
+        .about-animate.in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
         .fade-up { transition:opacity 1.8s cubic-bezier(0.16,1,0.3,1),transform 1.8s cubic-bezier(0.16,1,0.3,1); }
         .fade-up.hidden  { opacity:0; transform:translateY(40px); }
         .fade-up.visible { opacity:1; transform:translateY(0); }
@@ -256,7 +321,6 @@ export default function Home() {
         .sk-ring-wrap:hover { transform:translateY(-6px) scale(1.05); }
         .sk-ring-svg { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
         .sk-track    { fill:none; stroke:rgba(255,255,255,0.06); stroke-width:3; }
-        /* FIX 2 — slightly slower progress bar transition */
         .sk-progress { fill:none; stroke-width:3; stroke-linecap:round; transition:stroke-dashoffset 1.8s cubic-bezier(0.25,1,0.5,1); }
         .sk-logo-wrap { width:84px; height:84px; border-radius:16px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.04); padding:10px; }
         .sk-logo      { width:100%; height:100%; object-fit:contain; }
@@ -319,9 +383,7 @@ export default function Home() {
           opacity: 0;
           transition: opacity 0.4s ease;
         }
-        .disclaimer-text.typed {
-          opacity: 1;
-        }
+        .disclaimer-text.typed { opacity: 1; }
 
         /* ── Contact ── */
         .contact-section { display:flex; flex-direction:column; align-items:center; justify-content:space-between; min-height:100vh; width:100%; padding:90px 48px 48px; position:relative; z-index:10; }
@@ -346,10 +408,24 @@ export default function Home() {
         <Aurora colorStops={["#bb00ff", "#9d04c8", "#e100ff"]} amplitude={1} blend={0.7} />
       </div>
 
+      {/* ── HERO ── */}
       <section id="home" ref={homeRef} className="relative z-10 flex flex-col items-center justify-center text-center w-full min-h-screen px-6">
         <div className="w-full max-w-[900px] flex flex-col items-center" style={{ gap: 0, lineHeight: 1.1 }}>
-          <SplitTextComponent key={`hello-${splitKey}`} text="Hello!" className="text-[clamp(3.5rem,12vw,7rem)] font-[900] text-white" delay={320} style={{ letterSpacing: "-0.03em" }} />
-          <SplitTextComponent key={`name-${splitKey}`} text="I'm Fahed Hadji" className="text-[clamp(2.2rem,9vw,6rem)] font-[900] text-white" delay={280} style={{ letterSpacing: "-0.03em" }} />
+          {/* splitKey change unmounts+remounts SplitText → animation always replays */}
+          <SplitTextComponent
+            key={`hello-${splitKey}`}
+            text="Hello!"
+            className="text-[clamp(3.5rem,12vw,7rem)] font-[900] text-white"
+            delay={320}
+            style={{ letterSpacing: "-0.03em" }}
+          />
+          <SplitTextComponent
+            key={`name-${splitKey}`}
+            text="I'm Fahed Hadji"
+            className="text-[clamp(2.2rem,9vw,6rem)] font-[900] text-white"
+            delay={280}
+            style={{ letterSpacing: "-0.03em" }}
+          />
           <div className="flex items-center justify-center" style={{ marginTop: 24, marginBottom: 32 }}>
             <ShinyText text="Graphic Designer" speed={5} className="text-[clamp(1.2rem,4vw,2.25rem)] font-[600]" />
           </div>
@@ -360,13 +436,19 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── ABOUT ── */}
       <section id="about" ref={aboutRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center" style={{ paddingTop: "120px", paddingBottom: "120px" }}>
         <div className="absolute w-[500px] h-[500px] bg-[#bb00ff]/10 blur-[180px] rounded-full -bottom-20 -right-20 -z-10" />
-        <div className={`about-grid fade-up ${isVisible ? "visible" : "hidden"}`}>
-          <div className="img-col">
+
+        {/* about-grid has NO fade-up class any more; each column animates independently */}
+        <div className="about-grid">
+          {/* Image column – slides up with a slight extra delay */}
+          <div className={`img-col about-animate${aboutVisible ? " in" : ""}`} style={{ transitionDelay: "0.15s" }}>
             <img src="pro.png" alt="Fahed Hadji" className="profile-img" style={{ marginTop: "-100px" }} />
           </div>
-          <div className="text-col">
+
+          {/* Text column – slides up first */}
+          <div className={`text-col about-animate${aboutVisible ? " in" : ""}`} style={{ transitionDelay: "0s" }}>
             <div className="accent-line" />
             <h3 className="about-heading" style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", lineHeight: 1.1, fontSize: "clamp(2rem,8vw,8rem)", whiteSpace: "nowrap" }}>
               <span style={{ color: "white" }}>WHO </span><span style={{ color: "#bb00ff" }}>AM I?</span>
@@ -388,6 +470,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── SKILLS ── */}
       <section id="skills" ref={skillsRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ padding: "80px 48px" }}>
         <div style={{ position: "absolute", bottom: -100, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "rgba(187,0,255,0.07)", borderRadius: "50%", filter: "blur(130px)", zIndex: 0 }} />
         <h2 className="sk-title">My <span style={{ color: "#bb00ff" }}>SKILLS</span></h2>
@@ -396,14 +479,26 @@ export default function Home() {
             const R = 56, C = 2 * Math.PI * R;
             const offset = animated ? C - (s.pct / 100) * C : C;
             return (
-              <div key={s.name} className={`sk-card${skillsVisible ? " show" : ""}`} style={{ transitionDelay: `${i * 150}ms` }}>
+              <div
+                key={s.name}
+                className={`sk-card${skillsVisible ? " show" : ""}`}
+                style={{ transitionDelay: `${i * 150}ms` }}
+              >
                 <span className="sk-pct">{counters[i]}%</span>
                 <div className="sk-ring-wrap">
                   <svg className="sk-ring-svg" viewBox="0 0 120 120">
                     <circle className="sk-track" cx="60" cy="60" r={R} />
-                    <circle className="sk-progress" cx="60" cy="60" r={R}
-                      stroke={s.color} strokeDasharray={C} strokeDashoffset={offset}
-                      style={{ filter: `drop-shadow(0 0 6px ${s.color}99)`, transitionDelay: `${i * 150 + 300}ms` }} />
+                    <circle
+                      className="sk-progress"
+                      cx="60" cy="60" r={R}
+                      stroke={s.color}
+                      strokeDasharray={C}
+                      strokeDashoffset={offset}
+                      style={{
+                        filter: `drop-shadow(0 0 6px ${s.color}99)`,
+                        transitionDelay: `${i * 150 + 300}ms`,
+                      }}
+                    />
                   </svg>
                   <div className="sk-logo-wrap">
                     <img src={s.logo} alt={s.name} className="sk-logo" />
@@ -416,14 +511,23 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── PROJECTS ── */}
       <section id="projects" ref={projRef} className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center overflow-x-hidden" style={{ padding: "80px 16px" }}>
         <div style={{ position: "absolute", top: -100, right: -100, width: 500, height: 500, background: "rgba(187,0,255,0.06)", borderRadius: "50%", filter: "blur(130px)", zIndex: 0 }} />
 
-        <h2 className="proj-title" style={{ opacity: projVisible ? 1 : 0, transform: projVisible ? "translateY(0)" : "translateY(40px)", transition: "opacity 1.8s cubic-bezier(0.16,1,0.3,1), transform 1.8s cubic-bezier(0.16,1,0.3,1)" }}>
+        <h2 className="proj-title" style={{
+          opacity: projVisible ? 1 : 0,
+          transform: projVisible ? "translateY(0)" : "translateY(40px)",
+          transition: "opacity 1.8s cubic-bezier(0.16,1,0.3,1), transform 1.8s cubic-bezier(0.16,1,0.3,1)"
+        }}>
           My <span style={{ color: "#bb00ff" }}>PROJECTS</span>
         </h2>
 
-        <div className="tabs" style={{ opacity: projVisible ? 1 : 0, transform: projVisible ? "translateY(0)" : "translateY(40px)", transition: "opacity 1.8s cubic-bezier(0.16,1,0.3,1) 0.2s, transform 1.8s cubic-bezier(0.16,1,0.3,1) 0.2s" }}>
+        <div className="tabs" style={{
+          opacity: projVisible ? 1 : 0,
+          transform: projVisible ? "translateY(0)" : "translateY(40px)",
+          transition: "opacity 1.8s cubic-bezier(0.16,1,0.3,1) 0.2s, transform 1.8s cubic-bezier(0.16,1,0.3,1) 0.2s"
+        }}>
           {CATS.map(c => (
             <button key={c} className={`tab${activeTab === c ? " active" : ""}`} onClick={() => setActiveTab(c)}>
               {c}
@@ -493,6 +597,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── CONTACT ── */}
       <section id="contact" className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
         <div style={{
           position: "absolute", top: "50%", left: "50%",
@@ -524,15 +629,18 @@ export default function Home() {
           </div>
         </div>
 
+        {/* ── FOOTER ── */}
         <div className="contact-bottom w-full px-6 md:px-12 py-10 flex flex-col md:flex-row items-center justify-between gap-8 border-t border-white/5">
+
           {/* Left: Designer info */}
           <div className="flex-1 flex flex-col items-center md:items-start gap-1 order-2 md:order-1">
             <span className="text-white text-lg font-extrabold tracking-wide">FahdHadji19@gmail.com</span>
             <span className="text-white/40 text-[14px] tracking-widest uppercase">
-              @2026 Graphic Designer & Content Creator
+              @2026 Graphic Designer &amp; Content Creator
             </span>
           </div>
 
+          {/* Center: Social icons */}
           <div className="flex-1 flex items-center justify-center gap-6 order-1 md:order-2">
             <a href="https://wa.me/212718982539" target="_blank" rel="noreferrer"
               className="text-white/50 hover:text-[#25D366] transition-all duration-300 hover:scale-110">
@@ -558,9 +666,14 @@ export default function Home() {
             </a>
           </div>
 
+          {/* Right: Developer credit */}
           <div className="flex-1 flex flex-col items-center md:items-end order-3">
             <span className="contact-copy text-[17px] text-white tracking-widest text-center md:text-right">
-              Designed & Built by <a href="https://instagram.com/ilyass._ag" target="_blank" rel="noreferrer" className="text-[#bb00ff] hover:underline">@ilyass._ag</a>
+              Designed &amp; Built by{" "}
+              <a href="https://instagram.com/ilyass._ag" target="_blank" rel="noreferrer"
+                className="text-[#bb00ff] hover:underline">
+                @ilyass._ag
+              </a>
             </span>
           </div>
         </div>
