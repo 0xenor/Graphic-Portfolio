@@ -4,10 +4,6 @@ import Aurora from '@/components/Aurora';
 import ShinyText from '@/components/ShinyText';
 import Navbar from '@/src/components/Navbar';
 
-/* ─────────────────────────────────────────────
-   DATA — module-level constants, never
-   re-created across renders.
-───────────────────────────────────────────── */
 const skills = [
   { name: "Photoshop",     pct: 90, color: "#31A8FF", logo: "https://upload.wikimedia.org/wikipedia/commons/a/af/Adobe_Photoshop_CC_icon.svg"   },
   { name: "Illustrator",   pct: 90, color: "#FF9A00", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fb/Adobe_Illustrator_CC_icon.svg"  },
@@ -89,19 +85,11 @@ const catColors: Record<string, string> = {
 };
 
 const DISCLAIMER_TEXT = "هذه الصور المصغرة هي إعادة تصميم لغرض عرض المهارات الفنية فقط، ولا يمثل تعاوناً رسمياً مع صاحب المحتوى الأصلي.";
-
-/* ─────────────────────────────────────────────
-   Precompute SVG ring geometry — done once at
-   module load, never recomputed on render.
-───────────────────────────────────────────── */
 const RING_R = 60;
 const RING_C = 2 * Math.PI * RING_R;
 const ringOffsets = skills.map(s => RING_C - (s.pct / 100) * RING_C);
 
-/* ─────────────────────────────────────────────
-   rAF counter — writes DOM directly, zero
-   React state, zero re-renders.
-───────────────────────────────────────────── */
+
 function animateCounter(el: HTMLElement, target: number, duration: number, delay: number) {
   let raf = 0;
   const t = setTimeout(() => {
@@ -116,10 +104,6 @@ function animateCounter(el: HTMLElement, target: number, duration: number, delay
   return () => { clearTimeout(t); cancelAnimationFrame(raf); };
 }
 
-/* ─────────────────────────────────────────────
-   Disclaimer typing — setInterval at ~26fps
-   (fast enough, no RAF overhead needed here).
-───────────────────────────────────────────── */
 function DisclaimerTyping({ triggerKey }: { triggerKey: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef      = useRef<HTMLParagraphElement>(null);
@@ -164,9 +148,7 @@ function DisclaimerTyping({ triggerKey }: { triggerKey: number }) {
   );
 }
 
-/* ═══════════════════════════════════════════════
-   PAGE
-═══════════════════════════════════════════════ */
+
 export default function Home() {
   const [aboutVisible,  setAboutVisible]  = useState(false);
   const [skillsVisible, setSkillsVisible] = useState(false);
@@ -175,23 +157,19 @@ export default function Home() {
   const [activeTab,     setActiveTab]     = useState<Category>("All");
   const [disclaimerKey, setDisclaimerKey] = useState(0);
 
-  /* Counter DOM refs — mutated directly, never trigger re-renders */
   const counterEls      = useRef<(HTMLElement | null)[]>([]);
   const counterCleanups = useRef<(() => void)[]>([]);
 
-  /* Masonry */
   const masonryRef  = useRef<HTMLDivElement>(null);
   const rafRef      = useRef(0);
   const resizeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [masonryStyles, setMasonryStyles] = useState<{ top: number; left: number; width: number }[]>([]);
   const [masonryHeight, setMasonryHeight] = useState(0);
 
-  /* Section refs */
   const aboutRef  = useRef<HTMLElement>(null);
   const skillsRef = useRef<HTMLElement>(null);
   const projRef   = useRef<HTMLElement>(null);
 
-  /* ── About ── */
   useEffect(() => {
     const el = aboutRef.current; if (!el) return;
     const obs = new IntersectionObserver(([e]) => setAboutVisible(e.isIntersecting), {
@@ -201,7 +179,6 @@ export default function Home() {
     return () => obs.disconnect();
   }, []);
 
-  /* ── Skills with counter animation ── */
   useEffect(() => {
     const el = skillsRef.current; if (!el) return;
     const obs = new IntersectionObserver(([e]) => {
@@ -228,7 +205,6 @@ export default function Home() {
     return () => { obs.disconnect(); counterCleanups.current.forEach(fn => fn?.()); };
   }, []);
 
-  /* ── Projects — reveal once ── */
   useEffect(() => {
     const el = projRef.current; if (!el) return;
     const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setProjVisible(true); }, {
@@ -238,7 +214,6 @@ export default function Home() {
     return () => obs.disconnect();
   }, []);
 
-  /* ── Masonry: batch read → pure compute → single setState ── */
   const computeMasonry = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
@@ -247,11 +222,9 @@ export default function Home() {
       const cards = Array.from(container.children) as HTMLElement[];
       if (!cards.length) return;
 
-      /* BATCH READ — all DOM reads together, no interleaved writes */
       const cw = container.offsetWidth;
       const heights = cards.map(c => c.offsetHeight);
 
-      /* COMPUTE — pure JS, no DOM access */
       const gap = 24;
       const cols = cw >= 1024 ? 3 : cw >= 540 ? 2 : 1;
       const cardGap = cols === 1 ? 14 : gap;
@@ -266,20 +239,17 @@ export default function Home() {
         return { top, left, width: colW };
       });
 
-      /* WRITE — single React batch, one render */
       setMasonryStyles(styles);
       setMasonryHeight(Math.max(...colH));
     });
   }, []);
 
-  /* useMemo: filtered list only recalculates when activeTab changes */
   const filtered = useMemo(
     () => activeTab === "All" ? projects : projects.filter(p => p.category === activeTab),
     [activeTab],
   );
 
   useEffect(() => {
-    // Run immediately — no delay so tab switches are instant
     computeMasonry();
     const onResize = () => {
       if (resizeTimer.current) clearTimeout(resizeTimer.current);
@@ -298,9 +268,7 @@ export default function Home() {
     setDisclaimerKey(k => k + 1);
   }, []);
 
-  /* ═══════════════════════════════════════════
-     RENDER
-  ═══════════════════════════════════════════ */
+  
   return (
     <main className="relative w-full min-h-screen flex flex-col items-center overflow-x-hidden" style={{ background: "#0d0d0d" }}>
 
@@ -317,7 +285,7 @@ export default function Home() {
          */
         @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
 
-        /* ── Reset + global perf ── */
+        
         html { scroll-behavior: smooth; }
         *, *::before, *::after {
           box-sizing: border-box;
@@ -331,7 +299,7 @@ export default function Home() {
         }
         html, body { overscroll-behavior-y: none; }
 
-        /* ── Keyframes ── */
+        
         @keyframes hFadeUp {
           from { opacity:0; transform:translateY(24px); }
           to   { opacity:1; transform:translateY(0); }
@@ -340,7 +308,7 @@ export default function Home() {
           0%,100% { transform:translateX(-50%) translateY(0);   opacity:.35; }
           50%     { transform:translateX(-50%) translateY(9px); opacity:.80; }
         }
-        /* steps(1) = 1 repaint/sec — virtually zero GPU cost */
+        
         @keyframes hGrain {
           0%   { transform:translate(0,0); }
           20%  { transform:translate(-1%,-1%); }
@@ -358,9 +326,7 @@ export default function Home() {
           50%     { transform:scale(1.18); }
         }
 
-        /* ════════════════════════════════
-           HOME
-        ════════════════════════════════ */
+        
         .h-section {
           position:relative; width:100%; min-height:100svh;
           display:flex; flex-direction:column;
@@ -422,10 +388,7 @@ export default function Home() {
           will-change:opacity,transform;
           animation:hFadeUp .7s cubic-bezier(.16,1,.3,1) .44s both;
         }
-        /*
-         * will-change:transform → pre-promoted GPU layer.
-         * Hover only changes transform — zero layout, zero paint.
-         */
+        
         .h-btn {
           display:inline-flex; align-items:center; justify-content:center;
           gap:11px; padding:17px 44px; border-radius:999px;
@@ -465,9 +428,7 @@ export default function Home() {
           .h-cta { width:100%; padding:0 16px; }
         }
 
-        /* ════════════════════════════════
-           ABOUT
-        ════════════════════════════════ */
+        
         .about-grid {
           display:grid; grid-template-columns:1fr; width:100%;
           align-items:center; padding:0 20px;
@@ -503,9 +464,7 @@ export default function Home() {
         .about-text-wrap { text-align:center; }
         @media (min-width:768px) { .about-text-wrap { text-align:left; } }
 
-        /* ════════════════════════════════
-           SKILLS
-        ════════════════════════════════ */
+        
         .sk-title {
           font-family:'Bricolage Grotesque',sans-serif;
           font-weight:800; font-size:clamp(3.5rem,12vw,8rem);
@@ -550,9 +509,7 @@ export default function Home() {
         .sk-logo { width:100%; height:100%; object-fit:contain; }
         .sk-name { font-size:10px; font-weight:600; color:rgba(255,255,255,.32); letter-spacing:.07em; text-transform:uppercase; margin-top:10px; text-align:center; }
 
-        /* ════════════════════════════════
-           PROJECTS
-        ════════════════════════════════ */
+        
         .proj-title {
           font-family:'Bricolage Grotesque',sans-serif;
           font-weight:800; font-size:clamp(3rem,12vw,8rem);
@@ -599,9 +556,7 @@ export default function Home() {
         .proj-name  { font-size:14px; font-weight:800; color:#fff; letter-spacing:-.02em; }
         .proj-badge { display:inline-block; margin-top:5px; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:4px 10px; border-radius:999px; }
 
-        /* ════════════════════════════════
-           DISCLAIMER
-        ════════════════════════════════ */
+        
         .disclaimer-wrap {
           display:flex; flex-direction:row-reverse; align-items:center; justify-content:center;
           gap:10px; margin:0 auto 36px; padding:14px 20px;
@@ -617,9 +572,7 @@ export default function Home() {
         }
         .disclaimer-text.typed { opacity:1; }
 
-        /* ════════════════════════════════
-           CONTACT / FOOTER
-        ════════════════════════════════ */
+        
         .contact-title {
           font-family:'Bricolage Grotesque',sans-serif !important;
           font-weight:800 !important;
@@ -669,14 +622,7 @@ export default function Home() {
         .footer-right { display:flex; flex-direction:column; align-items:center; order:3; text-align:center; }
         @media (min-width:768px) { .footer-right { align-items:flex-end; text-align:right; flex:1; } }
 
-        /* ════════════════════════════════
-           SHARED PERF UTILITIES
-        ════════════════════════════════ */
-        /*
-         * Orbs: translateZ(0) forces compositing on GPU.
-         * Blurs are then cached GPU-side and never repainted on scroll.
-         * On mobile we skip blur entirely — solid opacity is far cheaper.
-         */
+        
         .orb {
           position:absolute; border-radius:50%;
           pointer-events:none; z-index:0;
@@ -686,10 +632,6 @@ export default function Home() {
           .orb { filter:none !important; opacity:.10 !important; width:160px !important; height:160px !important; }
         }
 
-        /*
-         * Shared scroll-reveal — opacity+transform only (compositor).
-         * Sections use this with a .in class toggled by IntersectionObserver.
-         */
         .reveal {
           opacity:0; transform:translateY(28px);
           transition:opacity 1.1s cubic-bezier(.16,1,.3,1),transform 1.1s cubic-bezier(.16,1,.3,1);
@@ -697,7 +639,7 @@ export default function Home() {
         }
         .reveal.in { opacity:1; transform:translateY(0); }
 
-        /* REDUCED MOTION — last rule, wins everything */
+
         @media (prefers-reduced-motion:reduce) {
           *,*::before,*::after {
             animation-duration:.01ms !important;
@@ -708,9 +650,7 @@ export default function Home() {
         }
       `}</style>
 
-      {/* ═══════════════════════════════════════
-          HOME
-      ═══════════════════════════════════════ */}
+
       <section id="home" className="h-section">
         <div className="h-glow" aria-hidden="true" />
         <div className="h-grain" aria-hidden="true" />
@@ -750,9 +690,7 @@ export default function Home() {
         </button>
       </section>
 
-      {/* ═══════════════════════════════════════
-          ABOUT
-      ═══════════════════════════════════════ */}
+
       <section
         id="about"
         ref={aboutRef}
@@ -764,11 +702,6 @@ export default function Home() {
 
         <div className="about-grid">
           <div className={`img-col about-animate${aboutVisible ? " in" : ""}`} style={{ transitionDelay: "0s" }}>
-            {/*
-              Hero image: loading="eager" + fetchPriority="high" ensures it
-              is fetched before other lazy images — prevents pop-in.
-              decoding="async" keeps decode off the main thread.
-            */}
             <img
               src="pro.png"
               alt="Fahed Hadji — Graphic Designer"
@@ -780,7 +713,7 @@ export default function Home() {
             />
           </div>
 
-          <div className={`text-col about-animate${aboutVisible ? " in" : ""}`} style={{ transitionDelay: "0s" }}>
+          <div className={`text-col about-animate${aboutVisible ? " in" : ""}`} style={{ transitionDelay: "1s" }}>
             <div className="accent-line" aria-hidden="true" />
             <h2 className="about-heading" style={{ margin: 0, letterSpacing: "-0.04em", lineHeight: 1.1, whiteSpace: "nowrap" }}>
               <span style={{ color: "white" }}>WHO </span><span style={{ color: "#bb00ff" }}>AM I?</span>
@@ -804,9 +737,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════
-          SKILLS
-      ═══════════════════════════════════════ */}
+
       <section
         id="skills"
         ref={skillsRef}
@@ -834,11 +765,7 @@ export default function Home() {
                     style={{ filter: `drop-shadow(0 0 7px ${s.color}99)`, transitionDelay: `${i * 120 + 260}ms` }}
                   />
                 </svg>
-                <div className="sk-logo-wrap">
-                  {/*
-                    Explicit width/height prevents layout shift while image loads.
-                    loading="lazy" defers fetch until near-viewport.
-                  */}
+                <div className="sk-logo-wrap">   
                   <img src={s.logo} alt={s.name} className="sk-logo" loading="lazy" decoding="async" width="80" height="80" />
                 </div>
               </div>
@@ -848,9 +775,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════
-          PROJECTS
-      ═══════════════════════════════════════ */}
       <section
         id="projects"
         ref={projRef}
@@ -917,9 +841,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* ═══════════════════════════════════════
-          CONTACT
-      ═══════════════════════════════════════ */}
+
       <section id="contact" className="contact-section">
         <div className="orb" aria-hidden="true"
           style={{ width: 600, height: 600, background: "rgba(187,0,255,0.08)", filter: "blur(140px)", top: "40%", left: "50%", transform: "translate(-50%,-50%) translateZ(0)" }} />

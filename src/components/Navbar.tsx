@@ -2,9 +2,6 @@
 import React, { useState, useEffect, useCallback, memo } from "react";
 import { Menu, X } from "lucide-react";
 
-/* ─────────────────────────────────────────────
-   Module-level constant — never re-created.
-───────────────────────────────────────────── */
 const NAV_LINKS = [
   { name: "Home",     id: "home",     num: "00" },
   { name: "About",    id: "about",    num: "01" },
@@ -14,21 +11,11 @@ const NAV_LINKS = [
 ] as const;
 
 type NavId = typeof NAV_LINKS[number]["id"];
-
-/*
- * scrollToSection — uses scrollIntoView instead of href="#id".
- * This always reads the live DOM position so it works correctly on
- * the first click even when sections have dynamic heights.
- */
 function scrollToSection(id: string, delay = 0) {
   const run = () => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   delay > 0 ? setTimeout(run, delay) : run();
 }
 
-/* ─────────────────────────────────────────────
-   Memoized desktop link — avoids re-renders
-   when only activeSection changes for siblings.
-───────────────────────────────────────────── */
 const DesktopLink = memo(function DesktopLink({
   id, name, active, onClick,
 }: { id: string; name: string; active: boolean; onClick: () => void }) {
@@ -39,9 +26,7 @@ const DesktopLink = memo(function DesktopLink({
   );
 });
 
-/* ─────────────────────────────────────────────
-   Memoized mobile link
-───────────────────────────────────────────── */
+
 const MobileLink = memo(function MobileLink({
   id, name, num, active, onClick,
 }: { id: string; name: string; num: string; active: boolean; onClick: () => void }) {
@@ -57,15 +42,12 @@ const MobileLink = memo(function MobileLink({
   );
 });
 
-/* ═══════════════════════════════════════════════
-   NAVBAR
-═══════════════════════════════════════════════ */
+
 const Navbar = () => {
   const [isOpen,   setIsOpen]   = useState(false);
   const [active,   setActive]   = useState<NavId>("home");
   const [scrolled, setScrolled] = useState(false);
 
-  /* ── Active section via IntersectionObserver ── */
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
     NAV_LINKS.forEach(({ id }) => {
@@ -81,7 +63,6 @@ const Navbar = () => {
     return () => observers.forEach(o => o.disconnect());
   }, []);
 
-  /* ── Scroll detection — passive listener ── */
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -96,7 +77,6 @@ const Navbar = () => {
   const handleMobileNav = useCallback((id: NavId) => {
     setActive(id);
     setIsOpen(false);
-    /* Small delay lets the overlay close animation start first */
     scrollToSection(id, 50);
   }, []);
 
@@ -150,7 +130,6 @@ const Navbar = () => {
           letter-spacing: -.05em; color: #fff; white-space: nowrap;
         }
 
-        /* Mobile overlay */
         .nb-overlay {
           position: fixed; inset: 0;
           background: rgba(0,0,0,.97);
@@ -207,7 +186,6 @@ const Navbar = () => {
         }
       `}</style>
 
-      {/* Desktop */}
       <div
         className={`nb-desktop nb-pill${scrolled ? " scrolled" : ""}`}
         style={{ alignItems: "center", justifyContent: "space-between", width: "100%", maxWidth: 860, height: 55, padding: "0 32px", borderRadius: 999 }}
@@ -220,7 +198,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile bar */}
       <div
         className="nb-mobile"
         style={{
@@ -239,7 +216,6 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile overlay */}
       <div className={`nb-overlay${isOpen ? " show" : " hide"}`} role="dialog" aria-modal="true" aria-label="Navigation">
         <button className="nb-close-btn" onClick={closeMenu} aria-label="Close navigation">
           <X size={22} />
