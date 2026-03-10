@@ -1,40 +1,110 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { Menu, X } from "lucide-react";
 
-interface NavLink {
-  name: string;
-  id: string;
-  href: string;
-  num: string;
+/* ─────────────────────────────────────────────
+   Module-level constant — never re-created.
+───────────────────────────────────────────── */
+const NAV_LINKS = [
+  { name: "Home",     id: "home",     num: "00" },
+  { name: "About",    id: "about",    num: "01" },
+  { name: "Skills",   id: "skills",   num: "02" },
+  { name: "Projects", id: "projects", num: "03" },
+  { name: "Contact",  id: "contact",  num: "04" },
+] as const;
+
+type NavId = typeof NAV_LINKS[number]["id"];
+
+/*
+ * scrollToSection — uses scrollIntoView instead of href="#id".
+ * This always reads the live DOM position so it works correctly on
+ * the first click even when sections have dynamic heights.
+ */
+function scrollToSection(id: string, delay = 0) {
+  const run = () => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  delay > 0 ? setTimeout(run, delay) : run();
 }
 
-const navLinks: NavLink[] = [
-  { name: "Home",     id: "home",     href: "/",         num: "00" },
-  { name: "About",    id: "about",    href: "#about",    num: "01" },
-  { name: "Skills",   id: "skills",   href: "#skills",   num: "02" },
-  { name: "Projects", id: "projects", href: "#projects", num: "03" },
-  { name: "Contact",  id: "contact",  href: "#contact",  num: "04" },
-];
+/* ─────────────────────────────────────────────
+   Memoized desktop link — avoids re-renders
+   when only activeSection changes for siblings.
+───────────────────────────────────────────── */
+const DesktopLink = memo(function DesktopLink({
+  id, name, active, onClick,
+}: { id: string; name: string; active: boolean; onClick: () => void }) {
+  return (
+    <button className={`nb-link${active ? " on" : ""}`} onClick={onClick}>
+      {name}
+    </button>
+  );
+});
 
+/* ─────────────────────────────────────────────
+   Memoized mobile link
+───────────────────────────────────────────── */
+const MobileLink = memo(function MobileLink({
+  id, name, num, active, onClick,
+}: { id: string; name: string; num: string; active: boolean; onClick: () => void }) {
+  return (
+    <button className={`nb-mlink${active ? " on" : ""}`} onClick={onClick}>
+      <span style={{ fontSize: 10, fontWeight: 700, marginRight: 22, color: active ? "#bb00ff" : "rgba(255,255,255,.1)" }}>
+        {num}
+      </span>
+      <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-.02em", textTransform: "uppercase", color: active ? "white" : "rgba(255,255,255,.2)" }}>
+        {name}
+      </span>
+    </button>
+  );
+});
+
+/* ═══════════════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════════════ */
 const Navbar = () => {
-  const [isOpen, setIsOpen]        = useState(false);
-  const [activeSection, setActive] = useState("home");
-  const [isScrolled, setScrolled]  = useState(false);
+  const [isOpen,   setIsOpen]   = useState(false);
+  const [active,   setActive]   = useState<NavId>("home");
+  const [scrolled, setScrolled] = useState(false);
 
+  /* ── Active section via IntersectionObserver ── */
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const observers: IntersectionObserver[] = [];
+    NAV_LINKS.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActive(id); },
+        { threshold: 0.35 },
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+    return () => observers.forEach(o => o.disconnect());
   }, []);
 
+  /* ── Scroll detection — passive listener ── */
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const handleDesktopNav = useCallback((id: NavId) => {
+    setActive(id);
+    scrollToSection(id);
+  }, []);
+
+  const handleMobileNav = useCallback((id: NavId) => {
+    setActive(id);
+    setIsOpen(false);
+    /* Small delay lets the overlay close animation start first */
+    scrollToSection(id, 50);
+  }, []);
+
+  const toggleMenu = useCallback(() => setIsOpen(v => !v), []);
+  const closeMenu  = useCallback(() => setIsOpen(false), []);
+
   return (
-    <nav style={{
-      position: "fixed", top: 24, left: 0, right: 0,
-      zIndex: 100, display: "flex", justifyContent: "center", padding: "0 16px",
-    }}>
+    <nav style={{ position: "fixed", top: 24, left: 0, right: 0, zIndex: 100, display: "flex", justifyContent: "center", padding: "0 16px" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap');
 
@@ -45,7 +115,9 @@ const Navbar = () => {
           backdrop-filter: blur(20px) saturate(160%);
           -webkit-backdrop-filter: blur(20px) saturate(160%);
           box-shadow: 0 4px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
-          transition: background .6s, box-shadow .6s, backdrop-filter .6s, border-color .6s;
+          transition: background .6s ease, box-shadow .6s ease, border-color .6s ease;
+          /* GPU layer — backdrop-filter already promotes this, but be explicit */
+          will-change: backdrop-filter;
         }
         .nb-pill.scrolled {
           background: rgba(255,255,255,0.03);
@@ -59,39 +131,37 @@ const Navbar = () => {
           font-size: 13.5px; font-weight: 600;
           letter-spacing: -.025em;
           color: rgba(255,255,255,.5);
-          text-decoration: none;
-          cursor: pointer;
-          position: relative;
-          padding-bottom: 2px;
-          transition: color .25s;
+          text-decoration: none; cursor: pointer;
+          position: relative; padding-bottom: 2px;
+          background: none; border: none;
+          transition: color .2s ease;
         }
         .nb-link:hover { color: rgba(255,255,255,.95); }
         .nb-link.on    { color: #fff; }
         .nb-link.on::after {
           content: '';
-          position: absolute;
-          bottom: -2px; left: 0; right: 0;
+          position: absolute; bottom: -2px; left: 0; right: 0;
           height: 1.5px; background: white;
           border-radius: 2px; opacity: .45;
         }
         .nb-brand {
           font-family: 'Syne', sans-serif;
           font-weight: 700; font-size: 15px;
-          letter-spacing: -.05em; color: #fff;
-          white-space: nowrap;
+          letter-spacing: -.05em; color: #fff; white-space: nowrap;
         }
 
-        /* mobile overlay */
+        /* Mobile overlay */
         .nb-overlay {
           position: fixed; inset: 0;
           background: rgba(0,0,0,.97);
           backdrop-filter: blur(28px);
+          -webkit-backdrop-filter: blur(28px);
           display: flex; flex-direction: column;
           align-items: flex-start; justify-content: center;
-          padding: 0 40px; gap: 6px;
-          z-index: 200;
-          transition: transform .5s cubic-bezier(.76,0,.24,1), opacity .4s;
+          padding: 0 40px; gap: 6px; z-index: 200;
           font-family: 'Syne', sans-serif;
+          transition: transform .45s cubic-bezier(.76,0,.24,1), opacity .35s ease;
+          will-change: transform, opacity;
         }
         .nb-overlay.hide { transform: translateX(100%); opacity: 0; pointer-events: none; }
         .nb-overlay.show { transform: translateX(0);    opacity: 1; }
@@ -100,9 +170,9 @@ const Navbar = () => {
           display: flex; align-items: center;
           width: 100%; max-width: 320px;
           padding: 18px 28px; border-radius: 14px;
-          text-decoration: none; cursor: pointer;
-          transition: background .25s;
-          border-left: 5px solid transparent;
+          cursor: pointer; background: none;
+          border: none; border-left: 5px solid transparent;
+          transition: background .2s ease;
         }
         .nb-mlink:hover { background: rgba(255,255,255,.04); }
         .nb-mlink.on {
@@ -116,95 +186,75 @@ const Navbar = () => {
           border-radius: 50%; padding: 10px;
           color: white; cursor: pointer;
           backdrop-filter: blur(12px);
-          transition: background .4s;
+          transition: background .3s ease;
           display: flex; align-items: center; justify-content: center;
           z-index: 210; position: relative;
         }
+        .nb-close-btn {
+          position: absolute; top: 28px; right: 28px;
+          background: rgba(255,255,255,.05);
+          border: 1px solid rgba(255,255,255,.1);
+          border-radius: 50%; padding: 10px;
+          color: white; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+        }
 
         .nb-desktop { display: flex; }
-        .nb-mobile  { display: none;  }
+        .nb-mobile  { display: none; }
         @media (max-width: 767px) {
           .nb-desktop { display: none; }
           .nb-mobile  { display: flex; }
         }
       `}</style>
 
-
-      <div className={`nb-desktop nb-pill${isScrolled ? " scrolled" : ""}`} style={{
-        alignItems: "center", justifyContent: "space-between",
-        width: "100%", maxWidth: 860, height: 55,
-        padding: "0 32px", borderRadius: 999,
-      }}>
+      {/* Desktop */}
+      <div
+        className={`nb-desktop nb-pill${scrolled ? " scrolled" : ""}`}
+        style={{ alignItems: "center", justifyContent: "space-between", width: "100%", maxWidth: 860, height: 55, padding: "0 32px", borderRadius: 999 }}
+      >
         <span className="nb-brand">Mr Fahed Designer</span>
         <div style={{ display: "flex", gap: 36 }}>
-          {navLinks.map(l => (
-            <a key={l.id} href={l.href}
-              className={`nb-link${activeSection === l.id ? " on" : ""}`}
-              onClick={() => setActive(l.id)}>
-              {l.name}
-            </a>
+          {NAV_LINKS.map(l => (
+            <DesktopLink key={l.id} id={l.id} name={l.name} active={active === l.id} onClick={() => handleDesktopNav(l.id)} />
           ))}
         </div>
       </div>
 
-
-      <div className="nb-mobile" style={{
-        width: "100%",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingLeft: 16,
-        paddingRight: 12,
-        height: 55,
-        borderRadius: 999,
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: isScrolled ? "rgba(255,255,255,0.03)" : "rgba(18,18,18,0.75)",
-        backdropFilter: "blur(20px) saturate(160%)",
-        WebkitBackdropFilter: "blur(20px) saturate(160%)",
-        transition: "background 0.6s",
-      }}>
+      {/* Mobile bar */}
+      <div
+        className="nb-mobile"
+        style={{
+          width: "100%", alignItems: "center", justifyContent: "space-between",
+          paddingLeft: 16, paddingRight: 12, height: 55, borderRadius: 999,
+          border: "1px solid rgba(255,255,255,0.08)",
+          background: scrolled ? "rgba(255,255,255,0.03)" : "rgba(18,18,18,0.75)",
+          backdropFilter: "blur(20px) saturate(160%)",
+          WebkitBackdropFilter: "blur(20px) saturate(160%)",
+          transition: "background 0.6s ease",
+        }}
+      >
         <span className="nb-brand">Mr Fahed Designer</span>
-        <button className="nb-hbtn" onClick={() => setIsOpen(!isOpen)}>
+        <button className="nb-hbtn" onClick={toggleMenu} aria-label={isOpen ? "Close menu" : "Open menu"}>
           {isOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
-      <div className={`nb-overlay${isOpen ? " show" : " hide"}`}>
-        <button
-          onClick={() => setIsOpen(false)}
-          style={{
-            position: "absolute", top: 28, right: 28,
-            background: "rgba(255,255,255,.05)",
-            border: "1px solid rgba(255,255,255,.1)",
-            borderRadius: "50%", padding: 10,
-            color: "white", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+      {/* Mobile overlay */}
+      <div className={`nb-overlay${isOpen ? " show" : " hide"}`} role="dialog" aria-modal="true" aria-label="Navigation">
+        <button className="nb-close-btn" onClick={closeMenu} aria-label="Close navigation">
           <X size={22} />
         </button>
 
-        <p style={{
-          color: "rgba(255,255,255,.18)", fontSize: 10, fontWeight: 700,
-          letterSpacing: "0.5em", textTransform: "uppercase",
-          marginBottom: 16,
-        }}>Navigation</p>
+        <p style={{ color: "rgba(255,255,255,.18)", fontSize: 10, fontWeight: 700, letterSpacing: "0.5em", textTransform: "uppercase", marginBottom: 16 }}>
+          Navigation
+        </p>
 
-        {navLinks.map(l => (
-          <a key={l.id} href={l.href}
-            className={`nb-mlink${activeSection === l.id ? " on" : ""}`}
-            onClick={() => { setActive(l.id); setIsOpen(false); }}>
-            <span style={{
-              fontSize: 10, fontWeight: 700, marginRight: 22,
-              color: activeSection === l.id ? "#bb00ff" : "rgba(255,255,255,.1)",
-            }}>{l.num}</span>
-            <span style={{
-              fontSize: 17, fontWeight: 700, letterSpacing: "-.02em", textTransform: "uppercase",
-              color: activeSection === l.id ? "white" : "rgba(255,255,255,.2)",
-            }}>{l.name}</span>
-          </a>
+        {NAV_LINKS.map(l => (
+          <MobileLink key={l.id} id={l.id} name={l.name} num={l.num} active={active === l.id} onClick={() => handleMobileNav(l.id)} />
         ))}
       </div>
     </nav>
   );
 };
 
-export default Navbar;
+export default memo(Navbar);
