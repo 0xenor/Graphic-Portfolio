@@ -12,8 +12,29 @@ const NAV_LINKS = [
 
 type NavId = typeof NAV_LINKS[number]["id"];
 function scrollToSection(id: string, delay = 0) {
-  const run = () => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const run = () => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   delay > 0 ? setTimeout(run, delay) : run();
+}
+
+function afterOverlayClose(overlayEl: HTMLElement | null, cb: () => void) {
+  if (!overlayEl) { cb(); return; }
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    overlayEl.removeEventListener("transitionend", onEnd);
+    clearTimeout(fallback);
+    cb();
+  };
+  const onEnd = (e: TransitionEvent) => {
+    if (e.propertyName === "transform") finish();
+  };
+  const fallback = setTimeout(finish, 520);
+  overlayEl.addEventListener("transitionend", onEnd);
 }
 
 const DesktopLink = memo(function DesktopLink({
@@ -47,6 +68,7 @@ const Navbar = () => {
   const [isOpen,   setIsOpen]   = useState(false);
   const [active,   setActive]   = useState<NavId>("home");
   const [scrolled, setScrolled] = useState(false);
+  const overlayRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
@@ -77,7 +99,7 @@ const Navbar = () => {
   const handleMobileNav = useCallback((id: NavId) => {
     setActive(id);
     setIsOpen(false);
-    scrollToSection(id, 50);
+    afterOverlayClose(overlayRef.current, () => scrollToSection(id));
   }, []);
 
   const toggleMenu = useCallback(() => setIsOpen(v => !v), []);
@@ -96,7 +118,6 @@ const Navbar = () => {
           -webkit-backdrop-filter: blur(20px) saturate(160%);
           box-shadow: 0 4px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
           transition: background .6s ease, box-shadow .6s ease, border-color .6s ease;
-          /* GPU layer — backdrop-filter already promotes this, but be explicit */
           will-change: backdrop-filter;
         }
         .nb-pill.scrolled {
@@ -216,7 +237,7 @@ const Navbar = () => {
         </button>
       </div>
 
-      <div className={`nb-overlay${isOpen ? " show" : " hide"}`} role="dialog" aria-modal="true" aria-label="Navigation">
+      <div ref={overlayRef} className={`nb-overlay${isOpen ? " show" : " hide"}`} role="dialog" aria-modal="true" aria-label="Navigation">
         <button className="nb-close-btn" onClick={closeMenu} aria-label="Close navigation">
           <X size={22} />
         </button>

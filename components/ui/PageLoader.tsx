@@ -86,13 +86,18 @@ interface PageLoaderProps {
 }
 
 export default function PageLoader({ children }: PageLoaderProps) {
-  const [loading, setLoading] = useState(true);
-  const [visible, setVisible] = useState(true);
+  // FIX: On mobile (< 768px) skip the loader entirely — initialise
+  // loading/visible to false so the overlay is never mounted.
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+  const [loading, setLoading] = useState(!isMobile);
+  const [visible, setVisible] = useState(!isMobile);
 
   useEffect(() => {
-    // attendre que la page soit fully loaded
+    // Mobile: loader was never shown, nothing to do.
+    if (isMobile) return;
+
     const done = () => {
-      // fade out après 600ms min pour éviter un flash trop rapide
       setTimeout(() => {
         setVisible(false);
         setTimeout(() => setLoading(false), 700);
@@ -105,6 +110,7 @@ export default function PageLoader({ children }: PageLoaderProps) {
       window.addEventListener("load", done);
       return () => window.removeEventListener("load", done);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

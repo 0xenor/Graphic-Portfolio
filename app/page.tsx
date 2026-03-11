@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import Aurora from '@/components/Aurora';
 import ShinyText from '@/components/ShinyText';
 import Navbar from '@/src/components/Navbar';
@@ -89,6 +89,7 @@ const RING_R = 60;
 const RING_C = 2 * Math.PI * RING_R;
 const ringOffsets = skills.map(s => RING_C - (s.pct / 100) * RING_C);
 
+const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
 function animateCounter(el: HTMLElement, target: number, duration: number, delay: number) {
   let raf = 0;
@@ -98,6 +99,23 @@ function animateCounter(el: HTMLElement, target: number, duration: number, delay
       const p = Math.min((now - start) / duration, 1);
       el.textContent = Math.round((1 - Math.pow(1 - p, 3)) * target) + "%";
       if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  }, delay);
+  return () => { clearTimeout(t); cancelAnimationFrame(raf); };
+}
+
+function animateStat(el: HTMLElement, target: number, suffix: string, duration: number, delay: number) {
+  let raf = 0;
+  const t = setTimeout(() => {
+    const start = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 2);
+      const current = Math.max(1, Math.round(eased * target));
+      el.textContent = current + suffix;
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else el.textContent = target + suffix; // guarantee exact final value
     };
     raf = requestAnimationFrame(tick);
   }, delay);
@@ -148,7 +166,6 @@ function DisclaimerTyping({ triggerKey }: { triggerKey: number }) {
   );
 }
 
-
 export default function Home() {
   const [aboutVisible,  setAboutVisible]  = useState(false);
   const [skillsVisible, setSkillsVisible] = useState(false);
@@ -156,27 +173,43 @@ export default function Home() {
   const [projVisible,   setProjVisible]   = useState(false);
   const [activeTab,     setActiveTab]     = useState<Category>("All");
   const [disclaimerKey, setDisclaimerKey] = useState(0);
-
+  const [tabKey,        setTabKey]        = useState(0);
+  const [imgReady,      setImgReady]      = useState(false);
   const counterEls      = useRef<(HTMLElement | null)[]>([]);
   const counterCleanups = useRef<(() => void)[]>([]);
-
+  const svgProgressEls = useRef<(SVGCircleElement | null)[]>([]);
+  const statRefs    = useRef<(HTMLElement | null)[]>([]);
+  const statCleanup = useRef<(() => void)[]>([]);
   const masonryRef  = useRef<HTMLDivElement>(null);
   const rafRef      = useRef(0);
   const resizeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const masonryCache = useRef<{ styles: { top: number; left: number; width: number }[]; height: number }>({ styles: [], height: 0 });
+  const lastKnownHeight = useRef(0);
   const [masonryStyles, setMasonryStyles] = useState<{ top: number; left: number; width: number }[]>([]);
   const [masonryHeight, setMasonryHeight] = useState(0);
-
   const aboutRef  = useRef<HTMLElement>(null);
   const skillsRef = useRef<HTMLElement>(null);
   const projRef   = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const el = aboutRef.current; if (!el) return;
-    const obs = new IntersectionObserver(([e]) => setAboutVisible(e.isIntersecting), {
-      threshold: 0, rootMargin: "0px 0px -40px 0px",
-    });
+    const obs = new IntersectionObserver(([e]) => {
+      const visible = e.isIntersecting;
+      setAboutVisible(visible);
+      if (visible) {
+        statCleanup.current.forEach(fn => fn?.());
+        statCleanup.current = [];
+        if (statRefs.current[0]) statCleanup.current[0] = animateStat(statRefs.current[0]!, 5,  "+", 2200, 0);
+        if (statRefs.current[1]) statCleanup.current[1] = animateStat(statRefs.current[1]!, 50, "+", 2600, 120);
+      } else {
+        statCleanup.current.forEach(fn => fn?.());
+        statCleanup.current = [];
+        if (statRefs.current[0]) statRefs.current[0]!.textContent = "5+";
+        if (statRefs.current[1]) statRefs.current[1]!.textContent = "50+";
+      }
+    }, { threshold: 0, rootMargin: "0px 0px -40px 0px" });
     obs.observe(el);
-    return () => obs.disconnect();
+    return () => { obs.disconnect(); statCleanup.current.forEach(fn => fn?.()); };
   }, []);
 
   useEffect(() => {
@@ -190,8 +223,18 @@ export default function Home() {
         setAnimated(true);
         skills.forEach((s, i) => {
           const el = counterEls.current[i];
-          if (!el) return;
-          counterCleanups.current[i] = animateCounter(el, s.pct, 1400, i * 120 + 300);
+          if (el) counterCleanups.current[i] = animateCounter(el, s.pct, 1400, i * 120 + 300);
+          const circle = svgProgressEls.current[i];
+          if (circle) {
+            circle.style.transition = 'none';
+            circle.style.strokeDashoffset = String(RING_C);
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                circle.style.transition = `stroke-dashoffset 1.4s cubic-bezier(.25,1,.5,1) ${i * 120 + 260}ms`;
+                circle.style.strokeDashoffset = String(ringOffsets[i]);
+              });
+            });
+          }
         });
       } else {
         counterCleanups.current.forEach(fn => fn?.());
@@ -199,6 +242,11 @@ export default function Home() {
         counterEls.current.forEach(el => { if (el) el.textContent = "0%"; });
         setSkillsVisible(false);
         setAnimated(false);
+        svgProgressEls.current.forEach(circle => {
+          if (!circle) return;
+          circle.style.transition = 'none';
+          circle.style.strokeDashoffset = String(RING_C);
+        });
       }
     }, { threshold: 0.1 });
     obs.observe(el);
@@ -225,6 +273,8 @@ export default function Home() {
       const cw = container.offsetWidth;
       const heights = cards.map(c => c.offsetHeight);
 
+      if (heights.every(h => h === 0)) return;
+
       const gap = 24;
       const cols = cw >= 1024 ? 3 : cw >= 540 ? 2 : 1;
       const cardGap = cols === 1 ? 14 : gap;
@@ -239,8 +289,18 @@ export default function Home() {
         return { top, left, width: colW };
       });
 
-      setMasonryStyles(styles);
-      setMasonryHeight(Math.max(...colH));
+      const newHeight = Math.max(...colH);
+      if (newHeight > 0) lastKnownHeight.current = newHeight;
+
+      const prev = masonryCache.current;
+      const changed = newHeight !== prev.height ||
+        styles.some((s, i) => !prev.styles[i] || s.top !== prev.styles[i].top || s.left !== prev.styles[i].left || s.width !== prev.styles[i].width);
+
+      if (changed) {
+        masonryCache.current = { styles, height: newHeight };
+        setMasonryStyles(styles);
+        setMasonryHeight(newHeight > 0 ? newHeight : lastKnownHeight.current);
+      }
     });
   }, []);
 
@@ -264,29 +324,66 @@ export default function Home() {
   }, [filtered, computeMasonry]);
 
   const handleTabClick = useCallback((c: Category) => {
+    masonryCache.current = { styles: [], height: 0 };
+    setMasonryStyles([]);
     setActiveTab(c);
+    setTabKey(k => k + 1);
     setDisclaimerKey(k => k + 1);
   }, []);
 
-  
+  useLayoutEffect(() => {
+    const img = new Image();
+    img.src = "pro.png";
+    if (img.complete && img.naturalWidth > 0) {
+      setImgReady(true);
+    } else {
+      img.onload  = () => setImgReady(true);
+      img.onerror = () => setImgReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const SECTIONS = ["home", "about", "skills", "projects", "contact"];
+    const handleClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const href = anchor.getAttribute("href") ?? "";
+      const hash = href.startsWith("#") ? href.slice(1) : new URL(href, location.href).hash.slice(1);
+      if (!SECTIONS.includes(hash)) return;
+      e.preventDefault();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const target = document.getElementById(hash);
+          if (target) target.scrollIntoView({ behavior: "smooth" });
+        });
+      });
+    };
+    document.addEventListener("click", handleClick, { capture: true });
+    return () => document.removeEventListener("click", handleClick, { capture: true });
+  }, []);
+
+  const aboutIn = aboutVisible && imgReady;
+
   return (
     <main className="relative w-full min-h-screen flex flex-col items-center overflow-x-hidden" style={{ background: "#0d0d0d" }}>
-
-      {/* Aurora — fixed, pointer-events:none, isolated GPU layer */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
         <Aurora colorStops={["#bb00ff", "#bb00ff", "#bb00ff"]} amplitude={1.0} blend={0.5} speed={1.0} />
       </div>
 
       <style>{`
-        /*
-         * Only load the weights we actually use (700, 800) to halve
-         * the font download size vs loading the full variable range.
-         * display=swap → text renders immediately with fallback font.
-         */
         @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
 
-        
         html { scroll-behavior: smooth; }
+        /* scroll-margin-top must equal navbar top (24px) + navbar height (55px) = 79px.
+           All sections use 80px so scrollIntoView lands just below the navbar. */
+        #home, #about, #skills, #projects, #contact { scroll-margin-top: 80px; }
+        /* On mobile, reduce top padding on all full-height sections so content
+           sits in the visual center of the remaining viewport below the navbar. */
+        @media (max-width:767px) {
+          #about   { padding-top:90px !important; padding-bottom:80px !important; }
+          #skills  { padding-top:90px !important; padding-bottom:80px !important; }
+          #projects{ padding-top:60px !important; padding-bottom:60px !important; }
+        }
         *, *::before, *::after {
           box-sizing: border-box;
           -webkit-tap-highlight-color: transparent;
@@ -299,7 +396,6 @@ export default function Home() {
         }
         html, body { overscroll-behavior-y: none; }
 
-        
         @keyframes hFadeUp {
           from { opacity:0; transform:translateY(24px); }
           to   { opacity:1; transform:translateY(0); }
@@ -308,7 +404,6 @@ export default function Home() {
           0%,100% { transform:translateX(-50%) translateY(0);   opacity:.35; }
           50%     { transform:translateX(-50%) translateY(9px); opacity:.80; }
         }
-        
         @keyframes hGrain {
           0%   { transform:translate(0,0); }
           20%  { transform:translate(-1%,-1%); }
@@ -326,19 +421,17 @@ export default function Home() {
           50%     { transform:scale(1.18); }
         }
 
-        
         .h-section {
           position:relative; width:100%; min-height:100svh;
           display:flex; flex-direction:column;
           align-items:center; justify-content:center;
           background:transparent; overflow:hidden;
           padding:120px 28px 110px; text-align:center;
-          /* layout containment limits reflow scope to this section */
           contain:layout style;
         }
+        @media (max-width:767px) { .h-section { padding-top:90px; padding-bottom:80px; } }
         .h-glow {
           position:absolute; top:-80px; left:50%;
-          /* translateZ(0) forces GPU layer — never repainted on scroll */
           transform:translateX(-50%) translateZ(0);
           width:640px; height:580px;
           background:radial-gradient(ellipse 55% 60% at 50% 0%,
@@ -361,7 +454,6 @@ export default function Home() {
           font-size:clamp(10px,2vw,13px); font-weight:500;
           letter-spacing:.36em; text-transform:uppercase;
           color:rgba(255,255,255,.32); margin:0 0 22px;
-          will-change:opacity,transform;
           animation:hFadeUp .65s cubic-bezier(.16,1,.3,1) .08s both;
         }
         .h-headline {
@@ -371,7 +463,6 @@ export default function Home() {
           background:linear-gradient(172deg,#fff 0%,#d4d4d4 55%,#b0b0b0 100%);
           -webkit-background-clip:text; -webkit-text-fill-color:transparent;
           background-clip:text; margin:0 0 36px;
-          will-change:opacity,transform;
           animation:hFadeUp .7s cubic-bezier(.16,1,.3,1) .20s both;
         }
         @media (max-width:480px) { .h-headline { font-size:clamp(3.4rem,18.5vw,5.5rem); margin-bottom:26px; } }
@@ -379,16 +470,13 @@ export default function Home() {
           font-size:clamp(.9rem,2.4vw,1.04rem); font-weight:400;
           line-height:1.78; color:rgba(255,255,255,.40);
           max-width:360px; margin:0 auto 52px;
-          will-change:opacity,transform;
           animation:hFadeUp .7s cubic-bezier(.16,1,.3,1) .32s both;
         }
         @media (max-width:480px) { .h-body { font-size:.88rem; max-width:285px; margin-bottom:38px; } }
         .h-cta {
           display:flex; flex-direction:column; align-items:center; gap:14px;
-          will-change:opacity,transform;
           animation:hFadeUp .7s cubic-bezier(.16,1,.3,1) .44s both;
         }
-        
         .h-btn {
           display:inline-flex; align-items:center; justify-content:center;
           gap:11px; padding:17px 44px; border-radius:999px;
@@ -428,7 +516,6 @@ export default function Home() {
           .h-cta { width:100%; padding:0 16px; }
         }
 
-        
         .about-grid {
           display:grid; grid-template-columns:1fr; width:100%;
           align-items:center; padding:0 20px;
@@ -452,64 +539,71 @@ export default function Home() {
           font-weight:800 !important; text-align:center;
         }
         @media (min-width:768px) { .about-heading { text-align:left; } }
+
+        /* about-animate triggers on aboutIn (both visible + imgLoaded) */
         .about-animate {
           opacity:0; transform:translateY(24px);
-          transition:opacity .5s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1);
-          transition-delay:0s !important;
-          backface-visibility:hidden; will-change:opacity,transform;
+          transition:opacity .55s cubic-bezier(.22,1,.36,1),transform .55s cubic-bezier(.22,1,.36,1);
+          backface-visibility:hidden;
         }
         .about-animate.in { opacity:1; transform:translateY(0); }
+
+        /* Image column slides in from right instead of up — uses translateX only
+           so it doesn't conflict with the opacity transition on .about-animate */
+        .img-col.about-animate { transform:translateX(40px); }
+        .img-col.about-animate.in { transform:translateX(0); }
+
         .stats-row { display:flex; gap:28px; flex-wrap:wrap; justify-content:center; }
         @media (min-width:768px) { .stats-row { justify-content:flex-start; } }
         .about-text-wrap { text-align:center; }
         @media (min-width:768px) { .about-text-wrap { text-align:left; } }
 
-        
         .sk-title {
           font-family:'Bricolage Grotesque',sans-serif;
           font-weight:800; font-size:clamp(3.5rem,12vw,8rem);
           letter-spacing:-.04em; text-transform:uppercase;
           color:#fff; line-height:1; margin-bottom:64px; text-align:center;
         }
+        @media (min-width:768px) { .sk-title { margin-bottom:48px; } }
+        /* Vertically center the skills content on desktop by equalizing padding */
+        @media (min-width:768px) { #skills { padding-top:20px !important; padding-bottom:80px !important; } }
         .sk-grid { display:flex; flex-wrap:wrap; gap:44px; align-items:center; justify-content:center; }
         @media (max-width:640px) { .sk-grid { gap:22px; } }
         .sk-card {
           display:flex; flex-direction:column; align-items:center;
           opacity:0; transform:translateY(30px);
           transition:opacity .55s ease,transform .55s ease;
-          backface-visibility:hidden; will-change:opacity,transform;
+          backface-visibility:hidden;
         }
         .sk-card.show { opacity:1; transform:translateY(0); }
         .sk-pct {
           font-size:12px; font-weight:700; color:#bb00ff;
           letter-spacing:.05em; margin-bottom:8px;
           align-self:flex-end; padding-right:2px; min-width:40px; text-align:right;
-          /* tabular-nums prevents layout shift while digits animate */
           font-variant-numeric:tabular-nums;
         }
         .sk-ring-wrap {
           position:relative; width:130px; height:130px;
           display:flex; align-items:center; justify-content:center;
           transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-          cursor:default; will-change:transform;
+          cursor:default;
         }
         @media (max-width:640px) { .sk-ring-wrap { width:105px; height:105px; } }
-        .sk-ring-wrap:hover { transform:translateY(-6px) scale(1.06); }
+        .sk-ring-wrap:hover { transform:translateY(-6px) scale(1.06); will-change:transform; }
         .sk-ring-svg { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
         .sk-track    { fill:none; stroke:rgba(255,255,255,.07); stroke-width:3; }
-        /* stroke-dashoffset transition runs fully on compositor — zero main-thread cost */
-        .sk-progress { fill:none; stroke-width:3; stroke-linecap:round; transition:stroke-dashoffset 1.4s cubic-bezier(.25,1,.5,1); }
+        /* transition is set imperatively in JS so the browser sees a clean from→to */
+        .sk-progress { fill:none; stroke-width:3; stroke-linecap:round; }
         @media (max-width:767px) { .sk-progress { filter:none !important; } }
         .sk-logo-wrap {
           width:92px; height:92px; border-radius:18px; overflow:hidden;
           display:flex; align-items:center; justify-content:center;
-          background:rgba(255,255,255,.05); padding:11px;
+          background:transparent; padding:11px;
         }
         @media (max-width:640px) { .sk-logo-wrap { width:72px; height:72px; } }
         .sk-logo { width:100%; height:100%; object-fit:contain; }
         .sk-name { font-size:10px; font-weight:600; color:rgba(255,255,255,.32); letter-spacing:.07em; text-transform:uppercase; margin-top:10px; text-align:center; }
 
-        
         .proj-title {
           font-family:'Bricolage Grotesque',sans-serif;
           font-weight:800; font-size:clamp(3rem,12vw,8rem);
@@ -529,34 +623,46 @@ export default function Home() {
         .tab:hover  { border-color:rgba(187,0,255,.5); color:#fff; }
         .tab.active { background:#bb00ff; border-color:#bb00ff; color:#fff; box-shadow:0 0 20px rgba(187,0,255,.4); }
         @media (max-width:480px) { .tab { font-size:10px; padding:8px 13px; } }
-        .proj-grid { position:relative; width:100%; }
+
+        /* FIX: Masonry grid — use contain:strict to limit paint scope */
+        .proj-grid {
+          position:relative; width:100%;
+          /* contain:layout prevents reflow bubbling up the tree */
+          contain:layout;
+        }
         .proj-card {
           position:absolute; border-radius:14px; overflow:hidden;
           background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07);
           cursor:pointer;
-          transition:transform .28s cubic-bezier(.34,1.4,.64,1),box-shadow .28s ease,border-color .28s ease;
-          backface-visibility:hidden; will-change:transform; isolation:isolate;
+          /* FIX: Remove will-change from every card — promote only on hover to avoid 57 GPU layers */
+          transition:transform .28s cubic-bezier(.34,1.4,.64,1),box-shadow .28s ease,border-color .28s ease,opacity .3s ease;
+          backface-visibility:hidden; isolation:isolate;
+          /* FIX: Cards start visible — no opacity:0 initial state that causes flash */
+          opacity:1;
         }
-        .proj-card:hover { transform:translateY(-6px); border-color:rgba(187,0,255,.4); box-shadow:0 16px 48px rgba(187,0,255,.15); }
+        .proj-card:hover {
+          transform:translateY(-6px);
+          border-color:rgba(187,0,255,.4);
+          box-shadow:0 16px 48px rgba(187,0,255,.15);
+          will-change:transform; /* promote only while hovered */
+        }
+        /* FIX: New-card fade-in animation when tab switches */
+        .proj-card.card-enter {
+          animation:fadeCard .25s cubic-bezier(.16,1,.3,1) both;
+        }
         .proj-img { width:100%; height:auto; display:block; object-fit:contain; }
         .proj-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(187,0,255,.08),rgba(0,0,0,.4)); }
-        /*
-         * pointer-events:none when invisible prevents the browser
-         * running hit-testing on 57 invisible overlays during scroll.
-         */
         .proj-overlay {
           position:absolute; inset:0;
           background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 60%);
           opacity:0; pointer-events:none;
           transition:opacity .25s ease;
           display:flex; flex-direction:column; justify-content:flex-end; padding:18px;
-          will-change:opacity;
         }
         .proj-card:hover .proj-overlay { opacity:1; pointer-events:auto; }
         .proj-name  { font-size:14px; font-weight:800; color:#fff; letter-spacing:-.02em; }
         .proj-badge { display:inline-block; margin-top:5px; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:4px 10px; border-radius:999px; }
 
-        
         .disclaimer-wrap {
           display:flex; flex-direction:row-reverse; align-items:center; justify-content:center;
           gap:10px; margin:0 auto 36px; padding:14px 20px;
@@ -572,7 +678,6 @@ export default function Home() {
         }
         .disclaimer-text.typed { opacity:1; }
 
-        
         .contact-title {
           font-family:'Bricolage Grotesque',sans-serif !important;
           font-weight:800 !important;
@@ -593,16 +698,17 @@ export default function Home() {
         .contact-section {
           position:relative; width:100%;
           display:flex; flex-direction:column; align-items:center;
-          text-align:center; padding:120px 24px 0;
+          text-align:center; padding:20px 24px 0;
           overflow:hidden; background:transparent;
         }
+        @media (min-width:768px) { .contact-section { padding-top:120px; } }
         .contact-bottom {
           display:flex; flex-direction:column; gap:20px;
           padding:32px 24px 28px;
           border-top:1px solid rgba(255,255,255,.07);
-          margin-top:80px; align-items:center; width:100%;
+          margin-top:24px; align-items:center; width:100%;
         }
-        @media (min-width:768px) { .contact-bottom { flex-direction:row; align-items:center; justify-content:space-between; padding:32px 48px 28px; } }
+        @media (min-width:768px) { .contact-bottom { flex-direction:row; align-items:center; justify-content:space-between; padding:32px 48px 28px; margin-top:80px; } }
         .footer-left   { display:flex; flex-direction:column; align-items:center; gap:4px; order:2; text-align:center; }
         @media (min-width:768px) { .footer-left { order:1; align-items:flex-start; text-align:left; flex:1; } }
         .footer-center { display:flex; align-items:center; justify-content:center; gap:20px; order:1; }
@@ -622,24 +728,26 @@ export default function Home() {
         .footer-right { display:flex; flex-direction:column; align-items:center; order:3; text-align:center; }
         @media (min-width:768px) { .footer-right { align-items:flex-end; text-align:right; flex:1; } }
 
-        
         .orb {
           position:absolute; border-radius:50%;
           pointer-events:none; z-index:0;
           will-change:transform; transform:translateZ(0);
         }
+        /* Disable expensive blur + grain on mobile — critical for Android smoothness */
         @media (max-width:767px) {
-          .orb { filter:none !important; opacity:.10 !important; width:160px !important; height:160px !important; }
+          .orb { filter:none !important; opacity:.08 !important; width:160px !important; height:160px !important; }
+          /* Grain SVG animation wastes a compositor layer on mobile */
+          .h-grain { animation:none !important; }
         }
 
         .reveal {
-          opacity:0; transform:translateY(28px);
-          transition:opacity 1.1s cubic-bezier(.16,1,.3,1),transform 1.1s cubic-bezier(.16,1,.3,1);
+          opacity:0; transform:translateY(16px);
+          transition:opacity .65s cubic-bezier(.25,1,.5,1),transform .65s cubic-bezier(.25,1,.5,1);
           will-change:opacity,transform;
         }
         .reveal.in { opacity:1; transform:translateY(0); }
 
-
+        /* FIX: Respect reduced-motion preference */
         @media (prefers-reduced-motion:reduce) {
           *,*::before,*::after {
             animation-duration:.01ms !important;
@@ -649,7 +757,6 @@ export default function Home() {
           }
         }
       `}</style>
-
 
       <section id="home" className="h-section">
         <div className="h-glow" aria-hidden="true" />
@@ -690,7 +797,6 @@ export default function Home() {
         </button>
       </section>
 
-
       <section
         id="about"
         ref={aboutRef}
@@ -701,19 +807,21 @@ export default function Home() {
           style={{ width: 500, height: 500, background: "rgba(187,0,255,0.10)", filter: "blur(160px)", bottom: -80, right: -80 }} />
 
         <div className="about-grid">
-          <div className={`img-col about-animate${aboutVisible ? " in" : ""}`} style={{ transitionDelay: "0s" }}>
+          {/* Image col — animates in once both visible AND image is loaded */}
+          <div className={`img-col about-animate${aboutIn ? " in" : ""}`}>
             <img
               src="pro.png"
               alt="Fahed Hadji — Graphic Designer"
               className="profile-img"
               style={{ marginTop: "-100px" }}
               loading="eager"
-              decoding="async"
+              decoding="sync"
               fetchPriority="high"
+              onLoad={() => setImgReady(true)}
             />
           </div>
 
-          <div className={`text-col about-animate${aboutVisible ? " in" : ""}`} style={{ transitionDelay: "1s" }}>
+          <div className={`text-col about-animate${aboutIn ? " in" : ""}`}>
             <div className="accent-line" aria-hidden="true" />
             <h2 className="about-heading" style={{ margin: 0, letterSpacing: "-0.04em", lineHeight: 1.1, whiteSpace: "nowrap" }}>
               <span style={{ color: "white" }}>WHO </span><span style={{ color: "#bb00ff" }}>AM I?</span>
@@ -726,17 +834,22 @@ export default function Home() {
               />
             </div>
             <div className="stats-row" style={{ maxWidth: 500 }}>
-              {([ ["5+", "Years Exp."], ["50+", "Clients"], ["∞", "Creativity"] ] as const).map(([num, label]) => (
-                <div key={label} style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
-                  <span style={{ fontSize: "clamp(1.8rem,4vw,2.5rem)", fontWeight: 900, color: "#bb00ff", lineHeight: 1 }}>{num}</span>
-                  <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.75em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>{label}</span>
-                </div>
-              ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
+                <span ref={el => { statRefs.current[0] = el; }} style={{ fontSize: "clamp(1.8rem,4vw,2.5rem)", fontWeight: 900, color: "#bb00ff", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>5+</span>
+                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.75em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Years Exp.</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
+                <span ref={el => { statRefs.current[1] = el; }} style={{ fontSize: "clamp(1.8rem,4vw,2.5rem)", fontWeight: 900, color: "#bb00ff", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>50+</span>
+                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.75em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Clients</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
+                <span style={{ fontSize: "clamp(1.8rem,4vw,2.5rem)", fontWeight: 900, color: "#bb00ff", lineHeight: 1 }}>∞</span>
+                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.75em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Creativity</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
-
 
       <section
         id="skills"
@@ -755,17 +868,18 @@ export default function Home() {
               <span className="sk-pct" ref={el => { counterEls.current[i] = el; }}>0%</span>
               <div className="sk-ring-wrap">
                 <svg className="sk-ring-svg" viewBox="0 0 130 130" aria-hidden="true">
-                  <circle className="sk-track"    cx="65" cy="65" r={RING_R} />
+                  <circle className="sk-track" cx="65" cy="65" r={RING_R} />
                   <circle
+                    ref={el => { svgProgressEls.current[i] = el; }}
                     className="sk-progress"
                     cx="65" cy="65" r={RING_R}
                     stroke={s.color}
                     strokeDasharray={RING_C}
-                    strokeDashoffset={animated ? ringOffsets[i] : RING_C}
-                    style={{ filter: `drop-shadow(0 0 7px ${s.color}99)`, transitionDelay: `${i * 120 + 260}ms` }}
+                    strokeDashoffset={RING_C}
+                    style={{ filter: `drop-shadow(0 0 7px ${s.color}99)` }}
                   />
                 </svg>
-                <div className="sk-logo-wrap">   
+                <div className="sk-logo-wrap">
                   <img src={s.logo} alt={s.name} className="sk-logo" loading="lazy" decoding="async" width="80" height="80" />
                 </div>
               </div>
@@ -807,16 +921,24 @@ export default function Home() {
         >
           {filtered.map((p, i) => (
             <div
-              key={p.id}
-              className="proj-card"
+              key={`${tabKey}-${p.id}`}
+              className="proj-card card-enter"
               style={{
+                animationDelay: `${Math.min(i * 30, 300)}ms`,
                 ...(masonryStyles[i]
                   ? { top: masonryStyles[i].top, left: masonryStyles[i].left, width: masonryStyles[i].width }
                   : { position: "relative", width: "100%" }),
               }}
             >
               {p.img
-                ? <img src={p.img} alt="" className="proj-img" onLoad={computeMasonry} loading="lazy" decoding="async" />
+                ? <img
+                    src={p.img}
+                    alt=""
+                    className="proj-img"
+                    onLoad={computeMasonry}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 : (
                   <div className="proj-placeholder">
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
@@ -840,7 +962,6 @@ export default function Home() {
           </div>
         )}
       </section>
-
 
       <section id="contact" className="contact-section">
         <div className="orb" aria-hidden="true"
